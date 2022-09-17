@@ -1,10 +1,9 @@
 FROM perl:5.34
 
-RUN cpanm Carton \
-    && mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+WORKDIR /app
+COPY . /app
 
-ONBUILD COPY cpanfile* /usr/src/app
-ONBUILD RUN carton install
+RUN curl -sL http://cpanmin.us/ | perl - --notest App::cpanminus App::cpm Carton
 
-ONBUILD COPY . /usr/src/app
+ENV PERL_CARTON_PATH /cpan
+RUN carton install -w $(nproc) -L $PERL_CARTON_PATH --with-develop

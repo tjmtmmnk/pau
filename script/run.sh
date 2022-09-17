@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker run --rm -v $(pwd):/usr/src/app perl:carton carton exec -- perl $1
+docker compose run --rm app carton exec -- perl -Ilib $1
