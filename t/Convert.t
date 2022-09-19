@@ -26,6 +26,11 @@ describe 'create_include_statement' => sub {
             item 'b';
         }, 'can get args';
     };
+    it 'die if invalid use statement' => sub {
+        like dies {
+            Pau::Convert->create_include_statement('my $a = 1;');
+        }, qr/invalid use statement/;
+    };
 };
 
 done_testing;
