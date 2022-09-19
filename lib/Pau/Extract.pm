@@ -1,5 +1,4 @@
 package Pau::Extract;
-
 use warnings;
 use strict;
 use List::Util qw(uniq);
@@ -28,6 +27,7 @@ sub new {
 
 # return: [Str]
 sub get_declared_functions {
+
     my $self = shift;
     my $subs = $self->{subs};
     return [ map { $_->name } @$subs ];
