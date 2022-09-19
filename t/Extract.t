@@ -2,10 +2,10 @@ use Test2::V0;
 use Test2::Tools::Spec;
 use Pau::Extract;
 
-describe 'get_functions' => sub {
+describe 'get_declared_functions' => sub {
     it 'can extract functions' => sub {
         my $pau       = Pau::Extract->new('t/fixtures/Functions.pm');
-        my $functions = $pau->get_functions;
+        my $functions = $pau->get_declared_functions;
         is $functions, array {
             item 'func_a';
             item 'func_b';
@@ -60,7 +60,28 @@ describe 'get_use_statements' => sub {
                 field 'functions'      => [];
                 field 'no_import'      => 0;
             };
-        }, 'can get use statements in order';
+        };
+    };
+};
+
+describe 'get_function_packages' => sub {
+    it 'can get instance and class method packages' => sub {
+        my $pau      = Pau::Extract->new('t/fixtures/UseFunction.pm');
+        my $packages = $pau->get_function_packages;
+        is $packages, array {
+            item 'Creature::Human';
+            item 'Vehicle::Car';
+        };
+    };
+};
+
+describe 'get_functions' => sub {
+    it 'can get function names' => sub {
+        my $pau      = Pau::Extract->new('t/fixtures/UseFunction.pm');
+        my $packages = $pau->get_functions;
+        is $packages, array {
+            item 'create_animal';
+        }, 'can get uniquely';
     };
 };
 
