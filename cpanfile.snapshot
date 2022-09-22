@@ -1,5 +1,33 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Algorithm-Diff-1.201
+    pathname: R/RJ/RJBS/Algorithm-Diff-1.201.tar.gz
+    provides:
+      Algorithm::Diff 1.201
+      Algorithm::Diff::_impl 1.201
+    requirements:
+      ExtUtils::MakeMaker 0
+  Array-Diff-0.09
+    pathname: N/NE/NEILB/Array-Diff-0.09.tar.gz
+    provides:
+      Array::Diff 0.09
+    requirements:
+      Algorithm::Diff 1.19
+      Class::Accessor::Fast 0
+      ExtUtils::MakeMaker 0
+      base 0
+      perl 5.008
+      strict 0
+      warnings 0
+  Class-Accessor-0.51
+    pathname: K/KA/KASEI/Class-Accessor-0.51.tar.gz
+    provides:
+      Class::Accessor 0.51
+      Class::Accessor::Fast 0.51
+      Class::Accessor::Faster 0.51
+    requirements:
+      ExtUtils::MakeMaker 0
+      base 1.01
   Clone-0.45
     pathname: A/AT/ATOOMIC/Clone-0.45.tar.gz
     provides:

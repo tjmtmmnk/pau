@@ -2,8 +2,10 @@ package Pau;
 use Pau::Extract;
 use Pau::Convert;
 use PPI::Token::Whitespace;
+use Array::Diff;
 
-sub insert_use_statements {
+# auto add and delete package
+sub auto_use {
     my ( $class, $filename ) = @_;
 
     my $extractor = Pau::Extract->new($filename);
@@ -11,8 +13,10 @@ sub insert_use_statements {
     my $current_use_statements = $extractor->get_use_statements;
     my $current_packages = [ map { $_->{module} } @$current_use_statements ];
     my $need_packages    = $extractor->get_function_packages;
+    my $added_packages =
+      Array::Diff->diff( $current_packages, $need_packages )->added;
     my $stmts = [ map { Pau::Convert->create_include_statement("use $_;") }
-          @$need_packages ];
+          @$added_packages ];
 
     my $insert_point = $extractor->get_insert_point;
     $insert_point->add_element( PPI::Token::Whitespace->new("\n") );
