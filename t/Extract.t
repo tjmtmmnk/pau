@@ -20,13 +20,6 @@ describe 'get_use_statements' => sub {
         is $use_statements, array {
             item hash {
                 field 'type'           => 'use';
-                field 'module'         => 'strict';
-                field 'module_version' => '';
-                field 'functions'      => [];
-                field 'no_import'      => 0;
-            };
-            item hash {
-                field 'type'           => 'use';
                 field 'module'         => 'Animal';
                 field 'module_version' => '';
                 field 'functions'      => [ 'cat', 'dog' ];
@@ -60,7 +53,7 @@ describe 'get_use_statements' => sub {
                 field 'functions'      => [];
                 field 'no_import'      => 0;
             };
-        };
+        }, 'no pragma';
     };
 };
 
