@@ -160,10 +160,6 @@ sub get_functions {
     return [ uniq @$functions ];
 }
 
-sub get_exported_functions {
-    my $self = shift;
-}
-
 sub dump {
     my $self   = shift;
     my $dumper = PPI::Dumper->new( $self->doc );
