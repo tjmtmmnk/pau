@@ -7,25 +7,34 @@ use Module::Load qw(load);
 my @lib_path_list;
 
 BEGIN {
-    @lib_path_list = split( / /, $ENV{PAU_LIB_PATH_LIST} );
+    # assure end of path is not /
+    # e.g) lib (not lib/)
+    @lib_path_list = map {
+        ( my $path = $_ ) =~ s/\/$//;
+        $path;
+    } split( / /, $ENV{PAU_LIB_PATH_LIST} );
 }
+
 use lib @lib_path_list;
 
-sub find_exported_functions {
+sub find_export_functions {
     my ( $class, $filename ) = @_;
 
     no strict qw(refs);
 
     my $pkg = _filename_to_pkg($filename);
-
     load $pkg;
-    return [ @{ $pkg . '::EXPORT' } ];
+
+    return {
+        export    => [ @{ $pkg . '::EXPORT' } ],
+        export_ok => [ @{ $pkg . '::EXPORT_OK' } ],
+    };
 }
 
 sub _filename_to_pkg {
-    my ($filename)     = @_;
+    my $filename       = shift;
     my $pkg            = $filename;
-    my $lib_path_regex = join( '|', @lib_path_list );
+    my $lib_path_regex = join( '|', map { $_ . '/' } @lib_path_list );
     $pkg =~ s/^($lib_path_regex)//;
     $pkg =~ s/\//::/g;
     $pkg =~ s/\.pm$//;
