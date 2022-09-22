@@ -17,7 +17,7 @@ BEGIN {
 
 use lib @lib_path_list;
 
-sub find_export_functions {
+sub find_exported_function {
     my ( $class, $filename ) = @_;
 
     no strict qw(refs);
@@ -26,6 +26,7 @@ sub find_export_functions {
     load $pkg;
 
     return {
+        package   => $pkg,
         export    => [ @{ $pkg . '::EXPORT' } ],
         export_ok => [ @{ $pkg . '::EXPORT_OK' } ],
     };
