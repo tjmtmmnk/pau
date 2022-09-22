@@ -11,40 +11,52 @@ use constant {
     METHOD          => 2,
 };
 
+use Class::Accessor::Lite::Lazy (
+    ro      => [qw(doc)],
+    ro_lazy => [qw(words subs includes)],
+);
+
 sub new {
     my ( $self, $filename ) = @_;
-    my $doc      = PPI::Document->new($filename);
-    my $words    = $doc->find('PPI::Token::Word');
-    my $subs     = $doc->find('PPI::Statement::Sub');
-    my $includes = $doc->find('PPI::Statement::Include');
-    bless {
-        doc      => $doc,
-        words    => $words,
-        subs     => $subs,
-        includes => $includes,
-    }, $self;
+    my $doc = PPI::Document->new($filename);
+    bless { doc => $doc, }, $self;
+}
+
+sub _build_words {
+    my $self = shift;
+    $self->doc->find('PPI::Token::Word');
+}
+
+sub _build_subs {
+    my $self = shift;
+    $self->doc->find('PPI::Statement::Sub');
+}
+
+sub _build_includes {
+    my $self = shift;
+    $self->doc->find('PPI::Statement::Include');
 }
 
 # return: [Str]
 sub get_declared_functions {
     my $self = shift;
-    my $subs = $self->{subs};
+    my $subs = $self->subs;
     return [ map { $_->name } @$subs ];
 }
 
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->{includes};
+    my $includes = $self->includes;
     return $includes->[-1] if scalar(@$includes) > 0;
 
-    return $self->{doc}->find_first('PPI::Statement::Package');
+    return $self->doc->find_first('PPI::Statement::Package');
 }
 
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
 sub get_use_statements {
     my $self     = shift;
-    my $includes = $self->{includes};
+    my $includes = $self->includes;
 
     my $use_statements = [];
     for my $inc (@$includes) {
@@ -104,7 +116,7 @@ sub _method_type {
 # return: { packages: [Str] }
 sub get_function_packages {
     my $self     = shift;
-    my $words    = $self->{words};
+    my $words    = $self->words;
     my $packages = [];
     for my $word (@$words) {
         my $type = $self->_method_type($word);
@@ -126,7 +138,7 @@ sub get_function_packages {
 # return: [Str]
 sub get_functions {
     my $self      = shift;
-    my $words     = $self->{words};
+    my $words     = $self->words;
     my $functions = [];
     for my $word (@$words) {
         my $type = $self->_method_type($word);
@@ -148,9 +160,13 @@ sub get_functions {
     return [ uniq @$functions ];
 }
 
+sub get_exported_functions {
+    my $self = shift;
+}
+
 sub dump {
     my $self   = shift;
-    my $dumper = PPI::Dumper->new( $self->{doc} );
+    my $dumper = PPI::Dumper->new( $self->doc );
     $dumper->print;
 }
 
