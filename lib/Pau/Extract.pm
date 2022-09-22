@@ -48,6 +48,7 @@ sub get_use_statements {
 
     my $use_statements = [];
     for my $inc (@$includes) {
+        next if $inc->pragma;
         my $statement = {
             type           => $inc->type,
             module         => $inc->module,
