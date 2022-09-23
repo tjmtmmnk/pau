@@ -27,8 +27,7 @@ sub find_exported_function {
 
     return {
         package   => $pkg,
-        export    => [ @{ $pkg . '::EXPORT' } ],
-        export_ok => [ @{ $pkg . '::EXPORT_OK' } ],
+        functions => [ @{ $pkg . '::EXPORT' }, @{ $pkg . '::EXPORT_OK' } ],
     };
 }
 

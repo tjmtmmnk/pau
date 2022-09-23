@@ -7,11 +7,9 @@ describe 'find_exported_functions' => sub {
         my $functions =
           Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
-            field package => 'ExportA';
-            field export  => array {
+            field package   => 'ExportA';
+            field functions => array {
                 item 'create_animal';
-            };
-            field export_ok => array {
                 item 'create_human';
             };
         }, 'can find @EXPORT and @EXPORT_OK';
@@ -20,11 +18,9 @@ describe 'find_exported_functions' => sub {
         my $functions =
           Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
-            field package => 'ExportA';
-            field export  => array {
+            field package   => 'ExportA';
+            field functions => array {
                 item 'create_animal';
-            };
-            field export_ok => array {
                 item 'create_human';
             };
         };
@@ -32,11 +28,9 @@ describe 'find_exported_functions' => sub {
         my $functions2 =
           Pau::Finder->find_exported_function('t/fixtures/lib/ExportB.pm');
         is $functions2, hash {
-            field package => 'ExportB';
-            field export  => array {
+            field package   => 'ExportB';
+            field functions => array {
                 item 'create_dog';
-            };
-            field export_ok => array {
                 item 'create_cat';
             };
         };
@@ -46,10 +40,8 @@ describe 'find_exported_functions' => sub {
         my $functions =
           Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
-            field export => array {
+            field functions => array {
                 item 'create_animal';
-            };
-            field export_ok => array {
                 item 'create_human';
             };
         }, 'can find';
