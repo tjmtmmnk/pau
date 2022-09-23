@@ -37,14 +37,7 @@ sub auto_use {
         $class->_create_json_file( CACHE_FILE_FOR_SEARCH, $func_to_package );
     }
     else {
-        my $lib_path_list = [
-            map {
-                ( my $path = $_ ) =~ s/\/$//;
-                $path;
-            } split( / /, $ENV{PAU_LIB_PATH_LIST} )
-        ];
-        my $lib_files =
-          [ glob join( ' ', map { $_ . '/*' } @$lib_path_list ) ];
+        my $lib_files = Pau::Finder->get_lib_files;
 
         my $functions = [];
         for my $lib_file (@$lib_files) {

@@ -17,6 +17,10 @@ BEGIN {
 
 use lib @lib_path_list;
 
+sub get_lib_files {
+    return [ glob join( ' ', map { $_ . '/*' } @lib_path_list ) ];
+}
+
 sub find_exported_function {
     my ( $class, $filename ) = @_;
 
