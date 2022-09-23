@@ -30,11 +30,17 @@ sub auto_use {
     my $stmts = [ map { Pau::Convert->create_include_statement("use $_;") }
           @$added_packages ];
 
-    my $functions        = $extractor->get_functions;
+    my $need_package_to_functions = {};
+    my $functions                 = $extractor->get_functions;
     my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
     if ($cached_functions) {
         my $func_to_package = $class->_func_to_package($cached_functions);
-        $class->_create_json_file( CACHE_FILE_FOR_SEARCH, $func_to_package );
+        for my $func (@$functions) {
+            if ( my $pkg = $func_to_package->{$func} ) {
+                $need_package_to_functions->{$pkg} //= [];
+                push $need_package_to_functions->{$pkg}->@*, $func;
+            }
+        }
     }
     else {
         my $lib_files = Pau::Finder->get_lib_files;
@@ -46,39 +52,27 @@ sub auto_use {
             push @$functions, $exported_function;
         }
         $class->_create_json_file( CACHE_FILE_FUNCTIONS, $functions );
+
+        my $func_to_package = $class->_func_to_package($cached_functions);
+        $class->_create_json_file( CACHE_FILE_FOR_SEARCH, $func_to_package );
     }
 
-#         for my $function (@$functions) {
-#             for my $export_function ( $exported_function->{export}->@* ) {
-#                 my $exist_in_export = $function eq $export_function;
-#                 if ($exist_in_export) {
-#                     push @$stmts,
-#                       Pau::Convert->create_include_statement(
-#                         "use @{[ $exported_function->{package} ]}};");
-#                 }
-#             }
-#             for my $export_ok_function ( $exported_function->{export_ok}->@* ) {
-#                 my $exist_in_export_ok = $function eq $export_ok_function;
-#                 if ($exist_in_export_ok) {
-#                     push @$stmts,
-#                       Pau::Convert->create_include_statement(
-# "use @{[ $exported_function->{package} ]} qw(@{[ $function ]})};"
-#                       );
-#                 }
-#             }
-#         }
-#     }
+    for my $pkg ( keys %$need_package_to_functions ) {
+        my $functions = join( ' ', $need_package_to_functions->{$pkg}->@* );
+        push @$stmts,
+          Pau::Convert->create_include_statement("use $pkg qw($functions);");
+    }
 
-    # my $insert_point = $extractor->get_insert_point;
-    # $insert_point->add_element( PPI::Token::Whitespace->new("\n") );
-    #
-    # for my $s (@$stmts) {
-    #     $s->add_element( PPI::Token::Whitespace->new("\n") );
-    #     $insert_point->insert_after($s);
-    # }
-    #
-    # use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-    # p $extractor->{doc}->serialize;
+    my $insert_point = $extractor->get_insert_point;
+    $insert_point->add_element( PPI::Token::Whitespace->new("\n") );
+
+    for my $s (@$stmts) {
+        $s->add_element( PPI::Token::Whitespace->new("\n") );
+        $insert_point->insert_after($s);
+    }
+
+    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
+    p $extractor->{doc}->serialize;
 }
 
 # make search more efficient by creating HashRef with key: function
