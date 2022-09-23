@@ -60,10 +60,24 @@ sub auto_use {
     for my $s (@$stmts) {
         $s->add_element( PPI::Token::Whitespace->new("\n") );
         $insert_point->insert_after($s);
+sub _read_cache {
+    my $class = shift;
+    my $file  = CACHE_FILE;
+    my $data  = try {
+        read_file($file)
     }
+    catch {
+        undef;
+    };
+    return $data ? decode_json($data) : undef;
+}
 
-    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-    p $extractor->{doc}->serialize;
+sub _create_cache {
+    my ( $class, $data ) = @_;
+    my $file = CACHE_FILE;
+    open my $fh, '>', $file or die qq/Can't open file "$file" : $!/;
+    print $fh encode_json($data);
+    close $fh or die qw/Can't close file "$file": $!/;
 }
 
 1;

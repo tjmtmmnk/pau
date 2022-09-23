@@ -5,3 +5,6 @@ services:
     volumes:
       - .:/app:cached
       - /app/local
+      - cache-vol:/app/.cache
+volumes:
+  cache-vol:

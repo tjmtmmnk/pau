@@ -3,6 +3,8 @@ requires 'Try::Tiny',                   '== 0.31';
 requires 'List::Util',                  '== 1.59';
 requires 'Array::Diff',                 '== 0.09';
 requires 'Class::Accessor::Lite::Lazy', '== 0.03';
+requires 'JSON::XS',                    '== 4.03';
+requires 'File::Slurp',                 '== 9999.32';
 
 on 'develop' => sub {
     requires 'Data::Printer', '== 1.000004';
