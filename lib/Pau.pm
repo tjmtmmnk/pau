@@ -1,6 +1,7 @@
 package Pau;
 use Pau::Extract;
 use Pau::Convert;
+use Pau::Util;
 use Pau::Finder;
 use PPI::Token::Whitespace;
 use Array::Diff;
@@ -34,16 +35,24 @@ sub auto_use {
 
     my $used_functions = $extractor->get_functions;
 
-    my $func_to_package = do {
-        my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
-        my $no_cache         = $ENV{NO_CACHE};
+    my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
+    my $max_last_modified_at = 0;
 
-        if ($cached_functions && !$no_cache) {
-            $class->_func_to_package($cached_functions);
+    my $lib_files = Pau::Finder->get_lib_files;
+
+    for my $lib_file (@$lib_files) {
+        my $last_modified_at = Pau::Util->last_modified_at($lib_file);
+
+        if ($max_last_modified_at < $last_modified_at) {
+            $max_last_modified_at = $last_modified_at;
         }
-        else {
-            my $lib_files = Pau::Finder->get_lib_files;
+    }
 
+    my $func_to_package = do {
+        if (!$ENV{NO_CACHE} && $last_cached_at > $max_last_modified_at) {
+            my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
+            $class->_func_to_package($cached_functions);
+        } else {
             my $exported_functions = [];
 
             for my $lib_file (@$lib_files) {
