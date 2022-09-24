@@ -40,6 +40,7 @@ describe 'find_exported_functions' => sub {
         my $functions =
           Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
+            field package   => 'ExportA';
             field functions => array {
                 item 'create_animal';
                 item 'create_human';

@@ -54,7 +54,7 @@ sub get_insert_point {
     my $includes = $self->{incs};
     return $includes->[-1] if scalar(@$includes) > 0;
 
-    return $self->doc->find_first('PPI::Statement::Package');
+    return $self->{doc}->find_first('PPI::Statement::Package');
 }
 
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]

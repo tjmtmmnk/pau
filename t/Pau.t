@@ -36,6 +36,10 @@ describe 'auto_use' => sub {
                 call arguments => 1;
             };
             item object {
+                call module    => 'ExportB';
+                call arguments => 1;
+            };
+            item object {
                 call module => 'Vehicle::Car';
             };
         }, 'can get sorted needed package, and not deleted pragma';
