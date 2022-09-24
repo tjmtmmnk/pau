@@ -10,10 +10,7 @@ use Try::Tiny;
 
 use List::Util qw(first);
 
-use constant {
-    CACHE_FILE_FUNCTIONS  => '/app/.cache/functions.json',
-    CACHE_FILE_FOR_SEARCH => '/app/.cache/for_search.json',
-};
+use constant { CACHE_FILE_FUNCTIONS => '/app/.cache/functions.json', };
 
 # auto add and delete package
 sub auto_use {
@@ -33,16 +30,22 @@ sub auto_use {
         }
     }
 
-    my $used_functions   = $extractor->get_functions;
-    my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
-    if ($cached_functions) {
-        my $func_to_package = $class->_func_to_package($cached_functions);
+    my $used_functions = $extractor->get_functions;
+
+    my $make_need_package_by_functions = sub {
+        my $func_to_package = shift;
         for my $func (@$used_functions) {
             if ( my $pkg = $func_to_package->{$func} ) {
                 $need_package_to_functions->{$pkg} //= [];
                 push $need_package_to_functions->{$pkg}->@*, $func;
             }
         }
+    };
+    my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
+    my $no_cache         = $ENV{NO_CACHE};
+    if ( $cached_functions && !$no_cache ) {
+        $make_need_package_by_functions->(
+            $class->_func_to_package($cached_functions) );
     }
     else {
         my $lib_files = Pau::Finder->get_lib_files;
@@ -53,8 +56,8 @@ sub auto_use {
             push @$exported_functions, $func;
         }
         $class->_create_json_file( CACHE_FILE_FUNCTIONS, $exported_functions );
-        $class->_create_json_file( CACHE_FILE_FOR_SEARCH,
-            $class->_func_to_package($cached_functions) );
+        $make_need_package_by_functions->(
+            $class->_func_to_package($exported_functions) );
     }
 
     my $stmts = [];
