@@ -85,7 +85,7 @@ describe 'get_functions' => sub {
             item 'is_cat';
             item 'no_func';
             item 'create_cat';
-        }, 'can get uniquely';
+        }, 'can get also not exported func';
     };
 };
 

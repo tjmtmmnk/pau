@@ -12,7 +12,7 @@ use constant {
     CLASS_METHOD          => 2,
     BUILTIN_FUNCTIONS_MAP => {
         map { $_ => 1, } keys %Type,
-        map { $_ => 1, } qw(if for while do unless foreach),
+        map { $_ => 1, } qw(if for while unless foreach),
     },
 };
 

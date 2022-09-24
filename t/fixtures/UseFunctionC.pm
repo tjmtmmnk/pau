@@ -1,4 +1,4 @@
-package t::fixtures::UseFunctionA;
+package t::fixtures::UseFunctionC;
 use warnings;
 use strict;
 
