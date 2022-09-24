@@ -40,32 +40,41 @@ sub auto_use {
 
     my $lib_files = Pau::Finder->get_lib_files;
 
+    my $stale_lib_files = [];
+
     for my $lib_file (@$lib_files) {
         my $last_modified_at = Pau::Util->last_modified_at($lib_file);
+
+        my $is_stale = $last_modified_at > $last_cached_at;
+        push @$stale_lib_files, $lib_file if $is_stale;
 
         if ($max_last_modified_at < $last_modified_at) {
             $max_last_modified_at = $last_modified_at;
         }
     }
 
-    my $func_to_package = do {
-        if (!$ENV{NO_CACHE} && $last_cached_at > $max_last_modified_at) {
-            my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
-            $class->_func_to_package($cached_functions);
-        } else {
-            my $exported_functions = [];
+    my $cached_pkg_to_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS) // {};
 
-            for my $lib_file (@$lib_files) {
-                my $func = Pau::Finder->find_exported_function($lib_file);
-                push @$exported_functions, $func;
-            }
-            $class->_create_json_file(CACHE_FILE_FUNCTIONS, $exported_functions);
-            $class->_func_to_package($exported_functions);
-        }
+    # partial cache update
+    # update only stale package
+    for my $lib_file (@$stale_lib_files) {
+        my $func = Pau::Finder->find_exported_function($lib_file);
+        $cached_pkg_to_functions->{ $func->{package} } = $func->{functions};
+    }
+    $class->_create_json_file(CACHE_FILE_FUNCTIONS, $cached_pkg_to_functions);
+
+    my $func_to_pkgs = {
+        map {
+            my $pkg   = $_;
+            my $funcs = $cached_pkg_to_functions->{$pkg};
+            map {
+                $_ => $pkg,
+            } @$funcs,
+        } keys %$cached_pkg_to_functions,
     };
 
     for my $func (@$used_functions) {
-        if (my $pkg = $func_to_package->{$func}) {
+        if (my $pkg = $func_to_pkgs->{$func}) {
             $need_package_to_functions->{$pkg} //= [];
             push $need_package_to_functions->{$pkg}->@*, $func;
         }
@@ -99,7 +108,6 @@ sub auto_use {
 }
 
 # make search more efficient by creating HashRef with key: function
-# from ArrayRef[{ package => Str, functions => ArrayRef[Str] }], to HashRef[function => package]
 sub _func_to_package {
     my ($class, $functions) = @_;
     return {
