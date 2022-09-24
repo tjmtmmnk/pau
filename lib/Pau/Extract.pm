@@ -23,18 +23,21 @@ sub new {
 }
 
 sub _build_words {
-    my $self = shift;
-    $self->doc->find('PPI::Token::Word');
+    my $self  = shift;
+    my $words = $self->doc->find('PPI::Token::Word');
+    return $words ? $words : [];
 }
 
 sub _build_subs {
     my $self = shift;
-    $self->doc->find('PPI::Statement::Sub');
+    my $subs = $self->doc->find('PPI::Statement::Sub');
+    return $subs ? $subs : [];
 }
 
 sub _build_includes {
     my $self = shift;
-    $self->doc->find('PPI::Statement::Include');
+    my $incs = $self->doc->find('PPI::Statement::Include');
+    return $incs ? $incs : [];
 }
 
 # return: [Str]
