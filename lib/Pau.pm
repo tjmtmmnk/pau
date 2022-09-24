@@ -79,8 +79,7 @@ sub auto_use {
         $insert_point->insert_after($stmt);
     }
 
-    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-    p $extractor->{doc}->serialize;
+    return $extractor->{doc}->serialize;
 }
 
 # make search more efficient by creating HashRef with key: function

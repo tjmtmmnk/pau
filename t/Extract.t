@@ -59,7 +59,7 @@ describe 'get_use_statements' => sub {
 
 describe 'get_function_packages' => sub {
     it 'can get instance and class method packages' => sub {
-        my $pau      = Pau::Extract->new('t/fixtures/UseFunction.pm');
+        my $pau      = Pau::Extract->new('t/fixtures/UseFunctionA.pm');
         my $packages = $pau->get_function_packages;
         is $packages, array {
             item 'Creature::Human';
@@ -70,7 +70,7 @@ describe 'get_function_packages' => sub {
 
 describe 'get_functions' => sub {
     it 'can get function names' => sub {
-        my $pau      = Pau::Extract->new('t/fixtures/UseFunction.pm');
+        my $pau      = Pau::Extract->new('t/fixtures/UseFunctionA.pm');
         my $packages = $pau->get_functions;
         is $packages, array {
             item 'create_animal';
