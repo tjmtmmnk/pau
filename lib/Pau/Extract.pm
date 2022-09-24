@@ -8,52 +8,47 @@ use PPI::Dumper;
 use Pod::Functions '%Type';
 
 use constant {
-    INSTANCE_METHOD       => 0,
-    CLASS_METHOD          => 1,
-    METHOD                => 2,
+    INSTANCE_METHOD       => 1,
+    CLASS_METHOD          => 2,
     BUILTIN_FUNCTIONS_MAP => { map { $_ => 1, } keys %Type },
 };
 
-use Class::Accessor::Lite::Lazy (
-    ro      => [qw(doc)],
-    ro_lazy => [qw(words subs includes)],
-);
-
 sub new {
     my ( $self, $filename ) = @_;
-    my $doc = PPI::Document->new($filename);
-    bless { doc => $doc, }, $self;
-}
+    my $doc   = PPI::Document->new($filename);
+    my $subs  = $doc->find('PPI::Statement::Sub');
+    my $incs  = $doc->find('PPI::Statement::Include');
+    my $stmts = $doc->find(
+        sub {
+            # e.g) sleep 1;
+            $_[1]->class eq 'PPI::Statement' ||
 
-sub _build_words {
-    my $self  = shift;
-    my $words = $self->doc->find('PPI::Token::Word');
-    return $words ? $words : [];
-}
+              # e.g) my $a = create_human;
+              $_[1]->isa('PPI::Statement::Variable') ||
 
-sub _build_subs {
-    my $self = shift;
-    my $subs = $self->doc->find('PPI::Statement::Sub');
-    return $subs ? $subs : [];
-}
-
-sub _build_includes {
-    my $self = shift;
-    my $incs = $self->doc->find('PPI::Statement::Include');
-    return $incs ? $incs : [];
+              # e.g) if(is_cat) {}
+              $_[1]->isa('PPI::Statement::Compound');
+        }
+    );
+    bless {
+        doc   => $doc,
+        stmts => $stmts ? $stmts : [],
+        subs  => $subs  ? $subs  : [],
+        incs  => $incs  ? $incs  : [],
+    }, $self;
 }
 
 # return: [Str]
 sub get_declared_functions {
     my $self = shift;
-    my $subs = $self->subs;
+    my $subs = $self->{subs};
     return [ map { $_->name } @$subs ];
 }
 
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->includes;
+    my $includes = $self->{incs};
     return $includes->[-1] if scalar(@$includes) > 0;
 
     return $self->doc->find_first('PPI::Statement::Package');
@@ -62,7 +57,7 @@ sub get_insert_point {
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
 sub get_use_statements {
     my $self     = shift;
-    my $includes = $self->includes;
+    my $includes = $self->{incs};
 
     my $use_statements = [];
     for my $inc (@$includes) {
@@ -98,6 +93,9 @@ sub _method_type {
 
     return undef unless $word_token && $word_token->snext_sibling;
 
+    my $is_contain_package = $word_token->content =~ /([A-Z]\w+(::)?)+/;
+    return undef unless $is_contain_package;
+
     # e.g) A::B->new
     my $is_instance_method = $word_token->snext_sibling->content eq '->'
       && ( $word_token->snext_sibling->snext_sibling
@@ -111,56 +109,41 @@ sub _method_type {
 
     return CLASS_METHOD if $is_class_method;
 
-    # e.g) create_animal()
-    my $is_method = $word_token->snext_sibling->isa('PPI::Structure::List');
-
-    return METHOD if $is_method;
-
     return undef;
 }
 
-# return: { packages: [Str] }
+# return: [Str]
 sub get_function_packages {
-    my $self     = shift;
-    my $words    = $self->words;
+    my $self = shift;
+
     my $packages = [];
-    for my $word (@$words) {
-        my $type = $self->_method_type($word);
+    for my $stmt ( $self->{stmts}->@* ) {
+        my $words = $stmt->find('PPI::Token::Word');
+        next unless $words;
+        for my $word (@$words) {
+            my $method_type = $self->_method_type($word);
+            next unless defined $method_type;
 
-        next unless defined $type;
-
-        if ( $type == INSTANCE_METHOD ) {
-            push @$packages, $word->content;
-        }
-        elsif ( $type == CLASS_METHOD ) {
-            if ( $word->content =~ /^((\w+::)+)\w+$/ ) {
-                push @$packages, substr( $1, 0, -2 );
+            if ( $method_type == INSTANCE_METHOD ) {
+                push @$packages, $word->content;
+            }
+            elsif ( $method_type == CLASS_METHOD ) {
+                if ( $word->content =~ /^((\w+::)+)\w+$/ ) {
+                    push @$packages, substr( $1, 0, -2 );
+                }
             }
         }
     }
-    return [ uniq @$packages ];
+    return $packages;
 }
 
 # return: [Str]
 sub get_functions {
-    my $self       = shift;
-    my $candidates = $self->{doc}->find(
-        sub {
-            # e.g) sleep 1;
-            $_[1]->class eq 'PPI::Statement' ||
-
-              # e.g) my $a = create_human;
-              $_[1]->isa('PPI::Statement::Variable') ||
-
-              # e.g) if(is_cat) {}
-              $_[1]->isa('PPI::Statement::Compound');
-        }
-    );
-    return [] unless $candidates;
+    my $self = shift;
 
     my $functions = [];
-    for my $cand (@$candidates) {
-        my $words = $cand->find('PPI::Token::Word');
+    for my $stmt ( $self->{stmts}->@* ) {
+        my $words = $stmt->find('PPI::Token::Word');
         next unless $words;
         for my $word (@$words) {
             my $is_method_call = try {
