@@ -66,7 +66,8 @@ sub auto_use {
     my $sorted_need_packages =
       [ sort { $b cmp $a } keys %$need_package_to_functions ];
     for my $pkg (@$sorted_need_packages) {
-        my $functions = join( ' ', $need_package_to_functions->{$pkg}->@* );
+        my $functions = join( ' ',
+            sort { $a cmp $b } $need_package_to_functions->{$pkg}->@* );
         my $stmt =
           $functions eq ''
           ? "use $pkg;"
