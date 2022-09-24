@@ -2,13 +2,16 @@ package Pau::Extract;
 use warnings;
 use strict;
 use List::Util qw(uniq);
+use Try::Tiny;
 use PPI::Document;
 use PPI::Dumper;
+use Pod::Functions '%Type';
 
 use constant {
-    INSTANCE_METHOD => 0,
-    CLASS_METHOD    => 1,
-    METHOD          => 2,
+    INSTANCE_METHOD       => 0,
+    CLASS_METHOD          => 1,
+    METHOD                => 2,
+    BUILTIN_FUNCTIONS_MAP => { map { $_ => 1, } keys %Type },
 };
 
 use Class::Accessor::Lite::Lazy (
@@ -108,7 +111,7 @@ sub _method_type {
 
     return CLASS_METHOD if $is_class_method;
 
-    # e.g) create_animal
+    # e.g) create_animal()
     my $is_method = $word_token->snext_sibling->isa('PPI::Structure::List');
 
     return METHOD if $is_method;
@@ -140,24 +143,39 @@ sub get_function_packages {
 
 # return: [Str]
 sub get_functions {
-    my $self      = shift;
-    my $words     = $self->words;
+    my $self       = shift;
+    my $candidates = $self->{doc}->find(
+        sub {
+            # e.g) sleep 1;
+            $_[1]->class eq 'PPI::Statement' ||
+
+              # e.g) my $a = create_human;
+              $_[1]->isa('PPI::Statement::Variable') ||
+
+              # e.g) if(is_cat) {}
+              $_[1]->isa('PPI::Statement::Compound');
+        }
+    );
+    return [] unless $candidates;
+
     my $functions = [];
-    for my $word (@$words) {
-        my $type = $self->_method_type($word);
-
-        next unless defined $type;
-
-        if ( $type == METHOD ) {
-
-            # avoid matching instance method
-            my $is_instance_method =
-                 $word->sprevious_sibling
-              && $word->sprevious_sibling->isa('PPI::Token::Operator')
-              && $word->sprevious_sibling->content eq '->';
-            next if $is_instance_method;
-
-            push @$functions, $word->content;
+    for my $cand (@$candidates) {
+        my $words = $cand->find('PPI::Token::Word');
+        next unless $words;
+        for my $word (@$words) {
+            my $is_method_call = try {
+                return $word->method_call;
+            }
+            catch {
+                return 0;
+            };
+            unless ($is_method_call) {
+                my $is_package = $word->content =~ /::/;
+                my $is_builtin = BUILTIN_FUNCTIONS_MAP->{ $word->content };
+                if ( !$is_package && !$is_builtin ) {
+                    push @$functions, $word->content;
+                }
+            }
         }
     }
     return [ uniq @$functions ];

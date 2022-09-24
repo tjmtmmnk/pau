@@ -70,21 +70,12 @@ describe 'get_function_packages' => sub {
 
 describe 'get_functions' => sub {
     it 'can get function names' => sub {
-        my $pau      = Pau::Extract->new('t/fixtures/UseFunctionA.pm');
-        my $packages = $pau->get_functions;
-        is $packages, array {
+        my $pau       = Pau::Extract->new('t/fixtures/UseFunctionA.pm');
+        my $functions = $pau->get_functions;
+        is $functions, array {
             item 'create_animal';
+            item 'create_cat';
         }, 'can get uniquely';
-    };
-};
-
-describe 'get_exported_functions' => sub {
-    it 'can get exported functions' => sub {
-        my $pau       = Pau::Extract->new('t/lib/ExportA.pm');
-        my $functions = $pau->get_exported_functions;
-        use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-        p $functions;
-        is 1, 1;
     };
 };
 

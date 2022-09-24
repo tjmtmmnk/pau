@@ -8,9 +8,7 @@ sub wan {
 }
 
 sub nyan {
-    if(create_animal('cat')) {
-        warn 'nyaaaan';
-    }
+    create_cat->sing;
 }
 
 sub uoo {
