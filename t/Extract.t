@@ -77,6 +77,16 @@ describe 'get_functions' => sub {
             item 'create_cat';
         }, 'can get uniquely';
     };
+    it 'can get function names in various uses' => sub {
+        my $pau       = Pau::Extract->new('t/fixtures/UseFunctionC.pm');
+        my $functions = $pau->get_functions;
+        is $functions, array {
+            item 'create_animal';
+            item 'is_cat';
+            item 'no_func';
+            item 'create_cat';
+        }, 'can get uniquely';
+    };
 };
 
 done_testing;

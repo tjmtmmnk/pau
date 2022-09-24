@@ -10,7 +10,10 @@ use Pod::Functions '%Type';
 use constant {
     INSTANCE_METHOD       => 1,
     CLASS_METHOD          => 2,
-    BUILTIN_FUNCTIONS_MAP => { map { $_ => 1, } keys %Type },
+    BUILTIN_FUNCTIONS_MAP => {
+        map { $_ => 1, } keys %Type,
+        map { $_ => 1, } qw(if for while do unless foreach),
+    },
 };
 
 sub new {
