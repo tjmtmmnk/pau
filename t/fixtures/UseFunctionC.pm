@@ -8,7 +8,7 @@ sub wan {
 }
 
 sub nyan {
-    if(is_cat) {
+    if (is_cat) {
         warn 'nyaaaan';
     }
     no_func;

@@ -10,19 +10,19 @@ BEGIN {
     # assure end of path is not /
     # e.g) lib (not lib/)
     @lib_path_list = map {
-        ( my $path = $_ ) =~ s/\/$//;
+        (my $path = $_) =~ s/\/$//;
         $path;
-    } split( / /, $ENV{PAU_LIB_PATH_LIST} );
+    } split(/ /, $ENV{PAU_LIB_PATH_LIST});
 }
 
 use lib @lib_path_list;
 
 sub get_lib_files {
-    return [ glob join( ' ', map { $_ . '/*' } @lib_path_list ) ];
+    return [ glob join(' ', map { $_ . '/*' } @lib_path_list) ];
 }
 
 sub find_exported_function {
-    my ( $class, $filename ) = @_;
+    my ($class, $filename) = @_;
 
     no strict qw(refs);
 
@@ -38,7 +38,7 @@ sub find_exported_function {
 sub _filename_to_pkg {
     my $filename       = shift;
     my $pkg            = $filename;
-    my $lib_path_regex = join( '|', map { $_ . '/' } @lib_path_list );
+    my $lib_path_regex = join('|', map { $_ . '/' } @lib_path_list);
     $pkg =~ s/^($lib_path_regex)//;
     $pkg =~ s/\//::/g;
     $pkg =~ s/\.pm$//;

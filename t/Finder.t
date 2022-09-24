@@ -5,7 +5,7 @@ use Pau::Finder;
 describe 'find_exported_functions' => sub {
     it 'can find exported functions' => sub {
         my $functions =
-          Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {
@@ -16,7 +16,7 @@ describe 'find_exported_functions' => sub {
     };
     it 'can find multiple file' => sub {
         my $functions =
-          Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {
@@ -26,19 +26,20 @@ describe 'find_exported_functions' => sub {
         };
 
         my $functions2 =
-          Pau::Finder->find_exported_function('t/fixtures/lib/ExportB.pm');
+            Pau::Finder->find_exported_function('t/fixtures/lib/ExportB.pm');
         is $functions2, hash {
             field package   => 'ExportB';
             field functions => array {
                 item 'create_dog';
                 item 'create_cat';
+                item 'is_cat';
             };
         };
     };
     it 'even if lib path end with /' => sub {
         local $ENV{PAU_LIB_PATH_LIST} = 't/fixtures/lib/';
         my $functions =
-          Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {
