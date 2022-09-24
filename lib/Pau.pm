@@ -22,20 +22,22 @@ sub auto_use {
     my $extractor = Pau::Extract->new($filename);
 
     my $current_use_statements = $extractor->get_use_statements;
-    my $current_packages = [ map { $_->{module} } @$current_use_statements ];
-    my $need_packages    = $extractor->get_function_packages;
-    my $added_packages =
-      Array::Diff->diff( $current_packages, $need_packages )->added;
+    my $need_package_to_functions =
+      { map { $_->{module} => $_->{functions}, } @$current_use_statements, };
 
-    my $stmts = [ map { Pau::Convert->create_include_statement("use $_;") }
-          @$added_packages ];
+    my $need_packages = $extractor->get_function_packages;
+    for my $pkg (@$need_packages) {
+        my $already_used = scalar $need_package_to_functions->{$pkg}->@* > 0;
+        unless ($already_used) {
+            $need_package_to_functions->{$pkg} = [];
+        }
+    }
 
-    my $need_package_to_functions = {};
-    my $functions                 = $extractor->get_functions;
+    my $used_functions   = $extractor->get_functions;
     my $cached_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS);
     if ($cached_functions) {
         my $func_to_package = $class->_func_to_package($cached_functions);
-        for my $func (@$functions) {
+        for my $func (@$used_functions) {
             if ( my $pkg = $func_to_package->{$func} ) {
                 $need_package_to_functions->{$pkg} //= [];
                 push $need_package_to_functions->{$pkg}->@*, $func;
@@ -45,30 +47,36 @@ sub auto_use {
     else {
         my $lib_files = Pau::Finder->get_lib_files;
 
-        my $functions = [];
+        my $exported_functions = [];
         for my $lib_file (@$lib_files) {
-            my $exported_function =
-              Pau::Finder->find_exported_function($lib_file);
-            push @$functions, $exported_function;
+            my $func = Pau::Finder->find_exported_function($lib_file);
+            push @$exported_functions, $func;
         }
-        $class->_create_json_file( CACHE_FILE_FUNCTIONS, $functions );
-
-        my $func_to_package = $class->_func_to_package($cached_functions);
-        $class->_create_json_file( CACHE_FILE_FOR_SEARCH, $func_to_package );
+        $class->_create_json_file( CACHE_FILE_FUNCTIONS, $exported_functions );
+        $class->_create_json_file( CACHE_FILE_FOR_SEARCH,
+            $class->_func_to_package($cached_functions) );
     }
 
-    for my $pkg ( keys %$need_package_to_functions ) {
+    my $stmts = [];
+
+    # sort desc to be inserted asc
+    my $sorted_need_packages =
+      [ sort { $b cmp $a } keys %$need_package_to_functions ];
+    for my $pkg (@$sorted_need_packages) {
         my $functions = join( ' ', $need_package_to_functions->{$pkg}->@* );
-        push @$stmts,
-          Pau::Convert->create_include_statement("use $pkg qw($functions);");
+        my $stmt =
+          $functions eq ''
+          ? "use $pkg;"
+          : "use $pkg qw($functions);";
+        push @$stmts, Pau::Convert->create_include_statement($stmt);
     }
 
     my $insert_point = $extractor->get_insert_point;
     $insert_point->add_element( PPI::Token::Whitespace->new("\n") );
 
-    for my $s (@$stmts) {
-        $s->add_element( PPI::Token::Whitespace->new("\n") );
-        $insert_point->insert_after($s);
+    for my $stmt (@$stmts) {
+        $stmt->add_element( PPI::Token::Whitespace->new("\n") );
+        $insert_point->insert_after($stmt);
     }
 
     use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
