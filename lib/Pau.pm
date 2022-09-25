@@ -24,6 +24,9 @@ sub auto_use {
 
     for my $current_inc ($extractor->get_includes->@*) {
         unless ($current_inc->pragma) {
+            if ($current_inc->next_sibling->isa('PPI::Token::Whitespace')) {
+                $current_inc->next_sibling->delete;
+            }
             $current_inc->delete;
         }
     }
