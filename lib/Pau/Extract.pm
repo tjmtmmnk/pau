@@ -106,7 +106,7 @@ sub _method_type {
 
     return undef unless $word_token && $word_token->snext_sibling;
 
-    my $is_contain_package = $word_token->content =~ /([A-Z]\w+(::)?)+/;
+    my $is_contain_package = $word_token->content =~ /([A-Z]\w*(::)?)+/;
     return undef unless $is_contain_package;
 
     # e.g) A::B->new
@@ -185,7 +185,7 @@ sub get_functions {
 
 sub dump {
     my $self   = shift;
-    my $dumper = PPI::Dumper->new($self->doc);
+    my $dumper = PPI::Dumper->new($self->{doc});
     $dumper->print;
 }
 

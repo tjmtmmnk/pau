@@ -66,6 +66,13 @@ describe 'get_function_packages' => sub {
             item 'Vehicle::Car';
         };
     };
+    it 'can get one character package' => sub {
+        my $pau      = Pau::Extract->new('t/fixtures/UseFunctionE.pm');
+        my $packages = $pau->get_function_packages;
+        is $packages, array {
+            item 'C';
+        };
+    };
 };
 
 describe 'get_functions' => sub {
