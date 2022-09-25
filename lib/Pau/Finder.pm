@@ -27,7 +27,9 @@ sub find_exported_function {
     no strict qw(refs);
 
     my $pkg = _filename_to_pkg($filename);
-    load $pkg;
+    eval {
+      load $pkg;
+    };
 
     return {
         package   => $pkg,
