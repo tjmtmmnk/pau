@@ -171,9 +171,15 @@ sub get_functions {
             };
 
             unless ($is_method_call) {
-                my $is_package  = $word->content =~ /::/;
-                my $is_builtin  = BUILTIN_FUNCTIONS_MAP->{ $word->content };
-                my $is_hash_key = $word->snext_sibling->content eq '=>';
+                my $is_package = $word->content =~ /::/;
+                my $is_builtin = BUILTIN_FUNCTIONS_MAP->{ $word->content };
+                my $is_hash_key =
+                    # e.g) my $hash = { key => value}
+                    ($word->snext_sibling && $word->snext_sibling->content eq '=>') ||
+                    # e.g) $hash->{key}
+                    (eval { $word->parent->parent->isa('PPI::Structure::Subscript') && $word->parent->parent->sprevious_sibling->content eq '->' }) ||
+                    # e.g_ $hash{key}
+                    (eval { $word->parent->parent->isa('PPI::Structure::Subscript') && $word->parent->parent->sprevious_sibling->isa('PPI::Token::Symbol') });
 
                 if (!$is_package && !$is_builtin && !$is_hash_key) {
                     push @$functions, $word->content;
