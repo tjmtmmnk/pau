@@ -4,10 +4,15 @@ use Pau::Convert;
 use Pau::Util;
 use Pau::Finder;
 use PPI::Token::Whitespace;
+use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 
 use List::Util qw(first);
 
 use constant { CACHE_FILE_FUNCTIONS => '/app/.cache/functions.json', };
+
+BEGIN {
+    $ENV{DEBUG} //= 0;
+}
 
 # auto add and delete package
 sub auto_use {
@@ -28,6 +33,11 @@ sub auto_use {
 
     my $need_packages = $extractor->get_function_packages;
 
+    if ($ENV{DEBUG}) {
+        p "need packages";
+        p $need_packages;
+    }
+
     for my $pkg (@$need_packages) {
         my $already_used = scalar $need_package_to_functions->{$pkg}->@* > 0;
 
@@ -38,10 +48,20 @@ sub auto_use {
 
     my $used_functions = $extractor->get_functions;
 
+    if ($ENV{DEBUG}) {
+        p "used functions";
+        p $used_functions;
+    }
+
     my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
     my $max_last_modified_at = 0;
 
     my $lib_files = Pau::Finder->get_lib_files;
+
+    if ($ENV{DEBUG}) {
+        p "lib files";
+        p $lib_files;
+    }
 
     my $stale_lib_files = [];
 
@@ -76,11 +96,21 @@ sub auto_use {
         } keys %$cached_pkg_to_functions,
     };
 
+    if ($ENV{DEBUG}) {
+        p "func to pkgs";
+        p $func_to_pkgs;
+    }
+
     for my $func (@$used_functions) {
         if (my $pkg = $func_to_pkgs->{$func}) {
             $need_package_to_functions->{$pkg} //= [];
             push $need_package_to_functions->{$pkg}->@*, $func;
         }
+    }
+
+    if ($ENV{DEBUG}) {
+        p "need pkg to funcs";
+        p $need_package_to_functions;
     }
 
     my $statements = [];
@@ -97,6 +127,11 @@ sub auto_use {
             ? "use $pkg;"
             : "use $pkg qw($functions);";
         push @$statements, Pau::Convert->create_include_statement($stmt);
+    }
+
+    if ($ENV{DEBUG}) {
+        p "statements";
+        p $statements;
     }
 
     $class->_insert_statements($extractor, $statements);
