@@ -120,11 +120,11 @@ sub auto_use {
 
     # sort desc to be inserted asc
     my $sorted_need_packages =
-        [ sort { $b cmp $a } keys %$need_package_to_functions ];
+        [ sort { lc($b) cmp lc($a) } keys %$need_package_to_functions ];
 
     for my $pkg (@$sorted_need_packages) {
         my $functions =
-            join(' ', sort { $a cmp $b } $need_package_to_functions->{$pkg}->@*);
+            join(' ', sort { lc($a) cmp lc($b) } $need_package_to_functions->{$pkg}->@*);
         my $stmt =
             $functions eq ''
             ? "use $pkg;"
@@ -156,7 +156,7 @@ sub _insert_statements {
         }
     } else {
         my $first_element  = $extractor->{doc}->first_element;
-        my $asc_statements = [ sort { $a->content cmp $b->content } @$statements ];
+        my $asc_statements = [ sort { lc($a->content) cmp lc($b->content) } @$statements ];
 
         for my $stmt (@$asc_statements) {
             $stmt->add_element(PPI::Token::Whitespace->new("\n"));
