@@ -4,10 +4,6 @@ use Pau::Convert;
 use Pau::Util;
 use Pau::Finder;
 use PPI::Token::Whitespace;
-use Array::Diff;
-use JSON::XS;
-use File::Slurp qw(read_file);
-use Try::Tiny;
 
 use List::Util qw(first);
 
@@ -60,7 +56,7 @@ sub auto_use {
         }
     }
 
-    my $cached_pkg_to_functions = $class->_read_json_file(CACHE_FILE_FUNCTIONS) // {};
+    my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
 
     # partial cache update
     # update only stale package
@@ -68,7 +64,7 @@ sub auto_use {
         my $func = Pau::Finder->find_exported_function($lib_file);
         $cached_pkg_to_functions->{ $func->{package} } = $func->{functions};
     }
-    $class->_create_json_file(CACHE_FILE_FUNCTIONS, $cached_pkg_to_functions);
+    Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS, $cached_pkg_to_functions);
 
     my $func_to_pkgs = {
         map {
@@ -87,7 +83,7 @@ sub auto_use {
         }
     }
 
-    my $stmts = [];
+    my $statements = [];
 
     # sort desc to be inserted asc
     my $sorted_need_packages =
@@ -100,18 +96,36 @@ sub auto_use {
             $functions eq ''
             ? "use $pkg;"
             : "use $pkg qw($functions);";
-        push @$stmts, Pau::Convert->create_include_statement($stmt);
+        push @$statements, Pau::Convert->create_include_statement($stmt);
     }
 
-    my $insert_point = $extractor->get_insert_point;
-    $insert_point->add_element(PPI::Token::Whitespace->new("\n"));
-
-    for my $stmt (@$stmts) {
-        $stmt->add_element(PPI::Token::Whitespace->new("\n"));
-        $insert_point->insert_after($stmt);
-    }
+    $class->_insert_statements($extractor, $statements);
 
     return $extractor->{doc}->serialize;
+}
+
+sub _insert_statements {
+    my ($class, $extractor, $statements) = @_;
+
+    my $insert_point = $extractor->get_insert_point;
+
+    if (defined $insert_point) {
+        $insert_point->add_element(PPI::Token::Whitespace->new("\n"));
+
+        for my $stmt (@$statements) {
+            $stmt->add_element(PPI::Token::Whitespace->new("\n"));
+            $insert_point->insert_after($stmt);
+        }
+    } else {
+        my $first_element  = $extractor->{doc}->first_element;
+        my $asc_statements = [ sort { $a->content cmp $b->content } @$statements ];
+
+        for my $stmt (@$asc_statements) {
+            $stmt->add_element(PPI::Token::Whitespace->new("\n"));
+            $first_element->insert_before($stmt);
+        }
+    }
+
 }
 
 # make search more efficient by creating HashRef with key: function

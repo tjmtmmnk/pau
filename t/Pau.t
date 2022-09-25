@@ -142,6 +142,28 @@ describe 'auto_use' => sub {
             end;
         }, 'do not change';
     };
+    it 'no use and no package' => sub {
+        my $filename   = 't/fixtures/scriptA.pl';
+        my $plain      = read_file($filename);
+        my $plain_doc  = PPI::Document->new(\$plain);
+        my $plain_incs = $plain_doc->find('PPI::Statement::Include');
+        is $plain_incs, "", 'no use';
+
+        my $formatted      = Pau->auto_use($filename);
+        my $formatted_doc  = PPI::Document->new(\$formatted);
+        use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
+        p $formatted;
+        my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
+        is $formatted_incs, array {
+            item object {
+                call module => 'ExportA';
+            };
+            item object {
+                call module => 'ExportB';
+            };
+            end;
+        }, 'can get sorted needed package';
+    };
 };
 
 done_testing;

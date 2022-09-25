@@ -89,4 +89,28 @@ describe 'get_functions' => sub {
     };
 };
 
+describe 'get_insert_point' => sub {
+    it 'exist use statements' => sub {
+        my $pau          = Pau::Extract->new('t/fixtures/UseFunctionA.pm');
+        my $insert_point = $pau->get_insert_point;
+        is $insert_point, object {
+            prop blessed => 'PPI::Statement::Include';
+            call module => 'strict';
+        }, 'can get last use statement';
+    };
+    it 'no use statements, exist package' => sub {
+        my $pau          = Pau::Extract->new('t/fixtures/UseFunctionB.pm');
+        my $insert_point = $pau->get_insert_point;
+        is $insert_point, object {
+            prop blessed => 'PPI::Statement::Package';
+            call namespace => 't::fixtures::UseFunctionB';
+        }, 'can get last use statement';
+    };
+    it 'no use statements, no package' => sub {
+        my $pau          = Pau::Extract->new('t/fixtures/scriptA.pl');
+        my $insert_point = $pau->get_insert_point;
+        is $insert_point, U;
+    };
+};
+
 done_testing;

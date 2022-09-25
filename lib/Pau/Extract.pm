@@ -56,10 +56,13 @@ sub get_declared_functions {
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->{doc}->find('PPI::Statement::Include');
-    return $includes->[-1] if $includes;
+    my $includes = $self->get_includes;
+    return $includes->[-1] if scalar(@$includes) > 0;
 
-    return $self->{doc}->find_first('PPI::Statement::Package');
+    my $pkg = $self->{doc}->find_first('PPI::Statement::Package');
+    return $pkg if $pkg;
+
+    return undef;
 }
 
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
