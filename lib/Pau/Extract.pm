@@ -20,7 +20,6 @@ sub new {
     my ($self, $filename) = @_;
     my $doc   = PPI::Document->new($filename);
     my $subs  = $doc->find('PPI::Statement::Sub');
-    my $incs  = $doc->find('PPI::Statement::Include');
     my $stmts = $doc->find(
         sub {
             # e.g) sleep 1;
@@ -37,8 +36,14 @@ sub new {
         doc   => $doc,
         stmts => $stmts ? $stmts : [],
         subs  => $subs  ? $subs  : [],
-        incs  => $incs  ? $incs  : [],
     }, $self;
+}
+
+# includes may change by deleting
+sub get_includes {
+    my $self = shift;
+    my $incs = $self->{doc}->find('PPI::Statement::Include');
+    return $incs ? $incs : [];
 }
 
 # return: [Str]
@@ -51,8 +56,8 @@ sub get_declared_functions {
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->{incs};
-    return $includes->[-1] if scalar(@$includes) > 0;
+    my $includes = $self->{doc}->find('PPI::Statement::Include');
+    return $includes->[-1] if $includes;
 
     return $self->{doc}->find_first('PPI::Statement::Package');
 }
@@ -60,7 +65,7 @@ sub get_insert_point {
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
 sub get_use_statements {
     my $self     = shift;
-    my $includes = $self->{incs};
+    my $includes = $self->get_includes;
 
     my $use_statements = [];
 

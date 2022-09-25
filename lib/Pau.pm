@@ -20,6 +20,13 @@ sub auto_use {
     my $extractor = Pau::Extract->new($filename);
 
     my $current_use_statements = $extractor->get_use_statements;
+
+    for my $current_inc ($extractor->get_includes->@*) {
+        unless ($current_inc->pragma) {
+            $current_inc->delete;
+        }
+    }
+
     my $need_package_to_functions =
         { map { $_->{module} => $_->{functions}, } @$current_use_statements, };
 

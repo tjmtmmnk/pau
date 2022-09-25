@@ -16,6 +16,7 @@ describe 'auto_use' => sub {
             item object {
                 call module => 'strict';
             };
+            end;
         }, 'can get only pragma';
 
         my $formatted      = Pau->auto_use($filename);
@@ -42,6 +43,7 @@ describe 'auto_use' => sub {
             item object {
                 call module => 'Vehicle::Car';
             };
+            end;
         }, 'can get sorted needed package, and not deleted pragma';
     };
     it 'no use' => sub {
@@ -59,6 +61,7 @@ describe 'auto_use' => sub {
                 call module    => 'ExportB';
                 call arguments => 1;
             };
+            end;
         }, 'can get needed package';
     };
     it 'various functions' => sub {
@@ -99,12 +102,14 @@ describe 'auto_use' => sub {
             item object {
                 call module => 'Vehicle::Car';
             };
+            end;
         }, 'can get sorted needed package, and not deleted pragma';
 
         my ($arg_ExportA) = $formatted_incs->[3]->arguments;
         my $literalA = [ $arg_ExportA->literal ];
         is $literalA, array {
             item 'create_animal';
+            end;
         }, 'can get arguments';
 
         my ($arg_ExportB) = $formatted_incs->[4]->arguments;
@@ -112,7 +117,30 @@ describe 'auto_use' => sub {
         is $literalB, array {
             item 'create_cat';
             item 'is_cat';
+            end;
         }, 'can get sorted arguments';
+    };
+    it 'already used' => sub {
+        my $filename   = 't/fixtures/UseFunctionD.pm';
+        my $plain      = read_file($filename);
+        my $plain_doc  = PPI::Document->new(\$plain);
+        my $plain_incs = $plain_doc->find('PPI::Statement::Include');
+        is $plain_incs, array {
+            item object {
+                call module => 'Creature::Human';
+            };
+            end;
+        }, 'used';
+
+        my $formatted      = Pau->auto_use($filename);
+        my $formatted_doc  = PPI::Document->new(\$formatted);
+        my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
+        is $formatted_incs, array {
+            item object {
+                call module => 'Creature::Human';
+            };
+            end;
+        }, 'do not change';
     };
 };
 
