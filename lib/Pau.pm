@@ -126,22 +126,4 @@ sub _func_to_package {
     };
 }
 
-sub _read_json_file {
-    my ($class, $filename) = @_;
-    my $data = try {
-        read_file($filename)
-    }
-    catch {
-        undef;
-    };
-    return $data ? decode_json($data) : undef;
-}
-
-sub _create_json_file {
-    my ($class, $filename, $data) = @_;
-    open my $fh, '>', $filename or die qq/Can't open file "$filename" : $!/;
-    print $fh encode_json($data);
-    close $fh or die qq/Can't close file $filename: $!/;
-}
-
 1;
