@@ -151,8 +151,6 @@ describe 'auto_use' => sub {
 
         my $formatted      = Pau->auto_use($filename);
         my $formatted_doc  = PPI::Document->new(\$formatted);
-        use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-        p $formatted;
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
             item object {

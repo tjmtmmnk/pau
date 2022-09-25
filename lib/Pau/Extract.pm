@@ -171,10 +171,11 @@ sub get_functions {
             };
 
             unless ($is_method_call) {
-                my $is_package = $word->content =~ /::/;
-                my $is_builtin = BUILTIN_FUNCTIONS_MAP->{ $word->content };
+                my $is_package  = $word->content =~ /::/;
+                my $is_builtin  = BUILTIN_FUNCTIONS_MAP->{ $word->content };
+                my $is_hash_key = $word->snext_sibling->content eq '=>';
 
-                if (!$is_package && !$is_builtin) {
+                if (!$is_package && !$is_builtin && !$is_hash_key) {
                     push @$functions, $word->content;
                 }
             }

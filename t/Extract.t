@@ -94,6 +94,11 @@ describe 'get_functions' => sub {
             item 'create_cat';
         }, 'can get also not exported func';
     };
+    it 'can ignore same name but not function' => sub {
+        my $pau       = Pau::Extract->new('t/fixtures/UseFunctionF.pm');
+        my $functions = $pau->get_functions;
+        is $functions, array { end; };
+    };
 };
 
 describe 'get_insert_point' => sub {
