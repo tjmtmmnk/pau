@@ -1,6 +1,7 @@
 package Pau::Finder;
 use warnings;
 use strict;
+use File::Find qw(find);
 
 use Module::Load qw(load);
 
@@ -18,7 +19,24 @@ BEGIN {
 use lib @lib_path_list;
 
 sub get_lib_files {
-    return [ glob join(' ', map { $_ . '/*' } @lib_path_list) ];
+    my $files = [];
+
+    sub process {
+        my $file = $_;
+
+        if ($file =~ /\.pm/) {
+            push @$files, $file;
+        }
+    }
+
+    for my $path (@lib_path_list) {
+        find({
+                wanted   => \&process,
+                no_chdir => 1,
+        }, $path);
+    }
+
+    return $files;
 }
 
 sub find_exported_function {
@@ -28,7 +46,7 @@ sub find_exported_function {
 
     my $pkg = _filename_to_pkg($filename);
     eval {
-      load $pkg;
+        load $pkg;
     };
 
     return {

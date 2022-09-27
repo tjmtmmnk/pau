@@ -2,6 +2,19 @@ use Test2::V0;
 use Test2::Tools::Spec;
 use Pau::Finder;
 
+describe 'get_lib_files' => sub {
+    it 'can find nested files' => sub {
+        my $files = Pau::Finder->get_lib_files;
+        is $files, bag {
+            item 't/fixtures/lib/C.pm';
+            item 't/fixtures/lib/ExportA.pm';
+            item 't/fixtures/lib/ExportB.pm';
+            item 't/fixtures/lib/One/First.pm';
+            item 't/fixtures/lib/One/Two/Second.pm';
+        };
+    };
+};
+
 describe 'find_exported_functions' => sub {
     it 'can find exported functions' => sub {
         my $functions =
