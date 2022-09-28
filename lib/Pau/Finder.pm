@@ -2,6 +2,7 @@ package Pau::Finder;
 use warnings;
 use strict;
 use File::Find qw(find);
+use Class::Load ':all';
 
 use Module::Load qw(load);
 
@@ -45,9 +46,7 @@ sub find_exported_function {
     no strict qw(refs);
 
     my $pkg = _filename_to_pkg($filename);
-    eval {
-        load $pkg;
-    };
+    load_class($pkg);
 
     return {
         package   => $pkg,
