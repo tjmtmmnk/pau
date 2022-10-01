@@ -48,10 +48,8 @@ sub find_exported_function {
     no strict qw(refs);
 
     my $pkg = _filename_to_pkg($filename);
-    eval {
-        load $pkg;
-    };
 
+    eval "require $pkg";
     return {
         package   => $pkg,
         functions => [ @{ $pkg . '::EXPORT' }, @{ $pkg . '::EXPORT_OK' } ],
