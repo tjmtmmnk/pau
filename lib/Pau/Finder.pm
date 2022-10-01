@@ -2,9 +2,7 @@ package Pau::Finder;
 use warnings;
 use strict;
 use File::Find qw(find);
-use Class::Load ':all';
 use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-
 use Module::Load qw(load);
 
 my @lib_path_list;
@@ -50,7 +48,9 @@ sub find_exported_function {
     no strict qw(refs);
 
     my $pkg = _filename_to_pkg($filename);
-    load_class($pkg);
+    eval {
+        load $pkg;
+    };
 
     return {
         package   => $pkg,
