@@ -68,18 +68,25 @@ sub auto_use {
 
     my $stale_lib_files = [];
 
-    for my $lib_file (@$lib_files) {
-        my $last_modified_at = Pau::Util->last_modified_at($lib_file);
+    if ( $ENV{NO_CACHE} ) {
+        $stale_lib_files = [@$lib_files];
+    }
+    else {
+        for my $lib_file (@$lib_files) {
+            my $last_modified_at = Pau::Util->last_modified_at($lib_file);
 
-        my $is_stale = $last_modified_at > $last_cached_at;
-        push @$stale_lib_files, $lib_file if $is_stale;
+            my $is_stale = $last_modified_at > $last_cached_at;
+            push @$stale_lib_files, $lib_file if $is_stale;
 
-        if ($max_last_modified_at < $last_modified_at) {
-            $max_last_modified_at = $last_modified_at;
+            if ( $max_last_modified_at < $last_modified_at ) {
+                $max_last_modified_at = $last_modified_at;
+            }
         }
     }
 
-    my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
+    my $cached_pkg_to_functions =
+      $ENV{NO_CACHE} ? {} : Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS)
+      // {};
 
     # partial cache update
     # update only stale package
