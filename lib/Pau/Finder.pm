@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use File::Find qw(find);
 use Class::Load ':all';
+use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 
 use Module::Load qw(load);
 
@@ -12,9 +13,9 @@ BEGIN {
     # assure end of path is not /
     # e.g) lib (not lib/)
     @lib_path_list = map {
-        (my $path = $_) =~ s/\/$//;
+        ( my $path = $_ ) =~ s/\/$//;
         $path;
-    } split(/ /, $ENV{PAU_LIB_PATH_LIST});
+    } split( / /, $ENV{PAU_LIB_PATH_LIST} );
 }
 
 use lib @lib_path_list;
@@ -25,23 +26,26 @@ sub get_lib_files {
     sub process {
         my $file = $_;
 
-        if ($file =~ /\.pm/) {
+        if ( $file =~ /\.pm/ ) {
             push @$files, $file;
         }
     }
 
     for my $path (@lib_path_list) {
-        find({
+        find(
+            {
                 wanted   => \&process,
                 no_chdir => 1,
-        }, $path);
+            },
+            $path
+        );
     }
 
     return $files;
 }
 
 sub find_exported_function {
-    my ($class, $filename) = @_;
+    my ( $class, $filename ) = @_;
 
     no strict qw(refs);
 
@@ -57,7 +61,7 @@ sub find_exported_function {
 sub _filename_to_pkg {
     my $filename       = shift;
     my $pkg            = $filename;
-    my $lib_path_regex = join('|', map { $_ . '/' } @lib_path_list);
+    my $lib_path_regex = join( '|', map { $_ . '/' } @lib_path_list );
     $pkg =~ s/^($lib_path_regex)//;
     $pkg =~ s/\//::/g;
     $pkg =~ s/\.pm$//;
