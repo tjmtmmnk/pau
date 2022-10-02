@@ -15,6 +15,8 @@ BEGIN {
         $path;
     } split(/ /, $ENV{PAU_LIB_PATH_LIST});
 
+    no warnings 'redefine';
+
     *CORE::GLOBAL::exit = sub { };
     *CORE::GLOBAL::warn = sub { };
     *CORE::GLOBAL::die  = sub { };
