@@ -15,6 +15,17 @@ describe 'get_lib_files' => sub {
     };
 };
 
+describe 'find_core_module_exported_functions' => sub {
+    it 'can find core module List::Util' => sub {
+        my $pkg_to_core_functions = Pau::Finder->find_core_module_exported_functions;
+        is $pkg_to_core_functions->{'List::Util'}, bag {
+            item 'max';
+            item 'first';
+            etc;
+        }, 'can get exported functions';
+    };
+};
+
 describe 'find_exported_functions' => sub {
     it 'can find exported functions' => sub {
         my $functions =
