@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile-devel
     volumes:
       - .:/app:cached
-      - /app/local
+      - /app/cpan
       - cache-vol:/app/.cache
 volumes:
   cache-vol:
