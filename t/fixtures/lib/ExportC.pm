@@ -1,4 +1,4 @@
-package ExportB;
+package ExportC;
 
 use Exporter 'import';
 our @EXPORT    = qw(create_flog);
