@@ -16,6 +16,9 @@ use constant {
 
 BEGIN {
     $ENV{DEBUG} //= 0;
+    *CORE::GLOBAL::exit = sub(;$) {};
+    *CORE::GLOBAL::warn = sub(;$) {};
+    *CORE::GLOBAL::die = sub(;$) {};
 }
 
 # auto add and delete package
