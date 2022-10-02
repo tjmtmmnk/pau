@@ -21,18 +21,18 @@ use lib @lib_path_list;
 sub get_lib_files {
     my $files = [];
 
-    sub process {
+    my $process = sub {
         my $file = $_;
 
         if ( $file =~ /\.pm/ ) {
             push @$files, $file;
         }
-    }
+    };
 
     for my $path (@lib_path_list) {
         find(
             {
-                wanted   => \&process,
+                wanted   => \&{$process},
                 no_chdir => 1,
             },
             $path
