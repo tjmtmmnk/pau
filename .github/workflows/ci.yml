@@ -19,4 +19,4 @@ jobs:
           run: |
             export PAU_LIB_PATH_LIST='t/fixtures/lib'
             export NO_CACHE=1
-            carton exec -- prove -lvr t/
+            carton exec -- prove -lvr -I t/fixtures/lib t/
