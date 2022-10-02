@@ -9,8 +9,10 @@ describe 'get_lib_files' => sub {
             item 't/fixtures/lib/C.pm';
             item 't/fixtures/lib/ExportA.pm';
             item 't/fixtures/lib/ExportB.pm';
+            item 't/fixtures/lib/ExportC.pm';
             item 't/fixtures/lib/One/First.pm';
             item 't/fixtures/lib/One/Two/Second.pm';
+            end;
         };
     };
 };
@@ -46,6 +48,7 @@ describe 'find_exported_functions' => sub {
             field functions => array {
                 item 'create_animal';
                 item 'create_human';
+                end;
             };
         };
 
@@ -57,6 +60,8 @@ describe 'find_exported_functions' => sub {
                 item 'create_dog';
                 item 'create_cat';
                 item 'is_cat';
+                item 'create_flog';
+                end;
             };
         };
     };
@@ -69,6 +74,7 @@ describe 'find_exported_functions' => sub {
             field functions => array {
                 item 'create_animal';
                 item 'create_human';
+                end;
             };
         }, 'can find';
     };
