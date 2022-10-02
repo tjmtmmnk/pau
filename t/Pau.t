@@ -142,6 +142,28 @@ describe 'auto_use' => sub {
             end;
         }, 'do not change';
     };
+    it 'called function multiple times' => sub {
+        my $filename   = 't/fixtures/UseFunctionG.pm';
+        my $plain      = read_file($filename);
+        my $plain_doc  = PPI::Document->new(\$plain);
+        my $plain_incs = $plain_doc->find('PPI::Statement::Include');
+        is $plain_incs, "", 'no use';
+
+        my $formatted      = Pau->auto_use($filename);
+        my $formatted_doc  = PPI::Document->new(\$formatted);
+        my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
+        is $formatted_incs, array {
+            item object {
+                call module => 'ExportB';
+            };
+        };
+        my ($arg_ExportB) = $formatted_incs->[0]->arguments;
+        my $literalB = [ $arg_ExportB->literal ];
+        is $literalB, array {
+            item 'create_cat';
+            end;
+        }, 'can get one argument';
+    };
     it 'no use and no package' => sub {
         my $filename   = 't/fixtures/scriptA.pl';
         my $plain      = read_file($filename);

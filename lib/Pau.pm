@@ -4,6 +4,7 @@ use Pau::Convert;
 use Pau::Util;
 use Pau::Finder;
 use PPI::Token::Whitespace;
+use List::Util qw(uniq);
 use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 
 use List::Util qw(first);
@@ -133,7 +134,7 @@ sub auto_use {
 
     for my $pkg (@$sorted_need_packages) {
         my $functions =
-            join(' ', sort { lc($a) cmp lc($b) } $need_package_to_functions->{$pkg}->@*);
+            join(' ', sort { lc($a) cmp lc($b) } uniq $need_package_to_functions->{$pkg}->@*);
         my $stmt =
             $functions eq ''
             ? "use $pkg;"
