@@ -14,6 +14,10 @@ BEGIN {
         (my $path = $_) =~ s/\/$//;
         $path;
     } split(/ /, $ENV{PAU_LIB_PATH_LIST});
+
+    *CORE::GLOBAL::exit = sub { };
+    *CORE::GLOBAL::warn = sub { };
+    *CORE::GLOBAL::die  = sub { };
 }
 
 use lib @lib_path_list;

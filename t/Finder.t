@@ -10,6 +10,7 @@ describe 'get_lib_files' => sub {
             item 't/fixtures/lib/ExportA.pm';
             item 't/fixtures/lib/ExportB.pm';
             item 't/fixtures/lib/ExportC.pm';
+            item 't/fixtures/lib/ExportD.pm';
             item 't/fixtures/lib/One/First.pm';
             item 't/fixtures/lib/One/Two/Second.pm';
             end;
