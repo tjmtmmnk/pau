@@ -1,0 +1,14 @@
+--add-whitespace
+--comma-arrow-breakpoints=1
+--continuation-indentation=4
+--cuddled-else
+--freeze-newlines
+--indent-block-comments
+--indent-columns=4
+--long-block-line-count=1
+--maximum-line-length=0
+--no-blanks-before-comments
+--no-opening-sub-brace-on-new-line
+--no-space-for-semicolon
+--paren-tightness=2
+--quiet
