@@ -56,9 +56,6 @@ sub auto_use {
         p $used_functions;
     }
 
-    my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
-    my $max_last_modified_at = 0;
-
     my $lib_files = Pau::Finder->get_lib_files;
 
     if ($ENV{DEBUG}) {
@@ -66,44 +63,49 @@ sub auto_use {
         p $lib_files;
     }
 
-    my $stale_lib_files = [];
+    my $pkg_to_functions = {};
 
-    if ( $ENV{NO_CACHE} ) {
-        $stale_lib_files = [@$lib_files];
+    if ($ENV{NO_CACHE}) {
+        for my $lib_file (@$lib_files) {
+            my $func = Pau::Finder->find_exported_function($lib_file);
+            $pkg_to_functions->{ $func->{package} } = $func->{functions};
+        }
     }
     else {
+        my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
+        $pkg_to_functions = {%$cached_pkg_to_functions};
+
+        my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
+        my $max_last_modified_at = 0;
+        my $stale_lib_files      = [];
+
         for my $lib_file (@$lib_files) {
             my $last_modified_at = Pau::Util->last_modified_at($lib_file);
 
             my $is_stale = $last_modified_at > $last_cached_at;
             push @$stale_lib_files, $lib_file if $is_stale;
 
-            if ( $max_last_modified_at < $last_modified_at ) {
+            if ($max_last_modified_at < $last_modified_at) {
                 $max_last_modified_at = $last_modified_at;
             }
         }
+        # partial cache update
+        # update only stale package
+        for my $lib_file (@$stale_lib_files) {
+            my $func = Pau::Finder->find_exported_function($lib_file);
+            $pkg_to_functions->{ $func->{package} } = $func->{functions};
+        }
+        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS, $pkg_to_functions);
     }
-
-    my $cached_pkg_to_functions =
-      $ENV{NO_CACHE} ? {} : Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS)
-      // {};
-
-    # partial cache update
-    # update only stale package
-    for my $lib_file (@$stale_lib_files) {
-        my $func = Pau::Finder->find_exported_function($lib_file);
-        $cached_pkg_to_functions->{ $func->{package} } = $func->{functions};
-    }
-    Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS, $cached_pkg_to_functions);
 
     my $func_to_pkgs = {
         map {
             my $pkg   = $_;
-            my $funcs = $cached_pkg_to_functions->{$pkg};
+            my $funcs = $pkg_to_functions->{$pkg};
             map {
                 $_ => $pkg,
             } @$funcs,
-        } keys %$cached_pkg_to_functions,
+        } keys %$pkg_to_functions,
     };
 
     if ($ENV{DEBUG}) {
