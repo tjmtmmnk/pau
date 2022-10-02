@@ -9,7 +9,10 @@ use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 
 use List::Util qw(first);
 
-use constant { CACHE_FILE_FUNCTIONS => '/app/.cache/functions.json', };
+use constant {
+    CACHE_FILE_FUNCTIONS             => '/app/.cache/functions.json',
+    CACHE_FILE_CORE_MODULE_FUNCTIONS => '/app/.cache/core-functions.json',
+};
 
 BEGIN {
     $ENV{DEBUG} //= 0;
@@ -67,6 +70,9 @@ sub auto_use {
     my $pkg_to_functions = {};
 
     if ($ENV{NO_CACHE}) {
+        my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
+        $pkg_to_functions = {%$core_pkg_to_functions};
+
         for my $lib_file (@$lib_files) {
             my $func = Pau::Finder->find_exported_function($lib_file);
             $pkg_to_functions->{ $func->{package} } = $func->{functions};
@@ -75,6 +81,9 @@ sub auto_use {
     else {
         my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
         $pkg_to_functions = {%$cached_pkg_to_functions};
+
+        my $cached_core_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS) // Pau::Finder->find_core_module_exported_functions;
+        $pkg_to_functions = { %$pkg_to_functions, %$cached_core_pkg_to_functions };
 
         my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
         my $max_last_modified_at = 0;

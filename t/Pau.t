@@ -156,6 +156,7 @@ describe 'auto_use' => sub {
             item object {
                 call module => 'ExportB';
             };
+            end;
         };
         my ($arg_ExportB) = $formatted_incs->[0]->arguments;
         my $literalB = [ $arg_ExportB->literal ];

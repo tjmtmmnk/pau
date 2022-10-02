@@ -86,6 +86,16 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.52
       Types::Serialiser 0
       common::sense 0
+  Module-CoreList-5.20220920
+    pathname: B/BI/BINGOS/Module-CoreList-5.20220920.tar.gz
+    provides:
+      Module::CoreList 5.20220920
+      Module::CoreList::Utils 5.20220920
+    requirements:
+      ExtUtils::MakeMaker 0
+      List::Util 0
+      Test::More 0
+      version 0.88
   Module-Pluggable-5.2
     pathname: S/SI/SIMONW/Module-Pluggable-5.2.tar.gz
     provides:
