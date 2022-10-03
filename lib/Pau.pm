@@ -82,22 +82,20 @@ sub auto_use {
         my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
         $pkg_to_functions = {%$cached_pkg_to_functions};
 
-        my $cached_core_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS) // Pau::Finder->find_core_module_exported_functions;
+        my $cached_core_pkg_to_functions      = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS);
+        my $should_save_core_pkg_to_functions = !defined $cached_core_pkg_to_functions;
+
+        $cached_core_pkg_to_functions //= Pau::Finder->find_core_module_exported_functions;
         $pkg_to_functions = { %$pkg_to_functions, %$cached_core_pkg_to_functions };
 
-        my $last_cached_at       = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
-        my $max_last_modified_at = 0;
-        my $stale_lib_files      = [];
+        my $last_cached_at  = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
+        my $stale_lib_files = [];
 
         for my $lib_file (@$lib_files) {
             my $last_modified_at = Pau::Util->last_modified_at($lib_file);
 
             my $is_stale = $last_modified_at > $last_cached_at;
             push @$stale_lib_files, $lib_file if $is_stale;
-
-            if ($max_last_modified_at < $last_modified_at) {
-                $max_last_modified_at = $last_modified_at;
-            }
         }
         # partial cache update
         # update only stale package
@@ -105,7 +103,10 @@ sub auto_use {
             my $func = Pau::Finder->find_exported_function($lib_file);
             $pkg_to_functions->{ $func->{package} } = $func->{functions};
         }
-        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS, $pkg_to_functions);
+
+        my $should_save_pkg_to_functions = scalar(@$stale_lib_files) > 0;
+        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS,             $pkg_to_functions)             if $should_save_pkg_to_functions;
+        Pau::Util->write_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS, $cached_core_pkg_to_functions) if $should_save_core_pkg_to_functions;
     }
 
     my $func_to_pkgs = {
