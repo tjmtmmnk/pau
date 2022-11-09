@@ -14,6 +14,9 @@ use lib @lib_path_list;
 
 use Pau;
 
-my $filename  = shift;
-my $formatted = Pau->auto_use($filename);
+my $source = "";
+while(<STDIN>) {
+    $source .= $_;
+}
+my $formatted = Pau->auto_use($source);
 print $formatted;

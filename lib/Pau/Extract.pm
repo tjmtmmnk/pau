@@ -17,8 +17,8 @@ use constant {
 };
 
 sub new {
-    my ($self, $filename) = @_;
-    my $doc   = PPI::Document->new($filename);
+    my ($self, $source) = @_;
+    my $doc   = PPI::Document->new(\$source);
     my $subs  = $doc->find('PPI::Statement::Sub');
     my $stmts = $doc->find(
         sub {

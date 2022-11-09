@@ -20,9 +20,9 @@ BEGIN {
 
 # auto add and delete package
 sub auto_use {
-    my ($class, $filename) = @_;
+    my ($class, $source) = @_;
 
-    my $extractor = Pau::Extract->new($filename);
+    my $extractor = Pau::Extract->new($source);
 
     my $current_use_statements = $extractor->get_use_statements;
 
