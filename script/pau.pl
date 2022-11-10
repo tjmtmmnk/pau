@@ -2,9 +2,9 @@
 # USAGE: docker run --rm -e PAU_LIB_PATH_LIST='lib' -it -v cache-vol:/app/.cache -v (pwd):/src pau:1.0 A.pm
 
 BEGIN {
-    *CORE::GLOBAL::exit = sub { };
-    *CORE::GLOBAL::warn = sub { };
-    *CORE::GLOBAL::die  = sub { };
+    *CORE::GLOBAL::exit   = sub { };
+    *CORE::GLOBAL::die    = sub { };
+
     # assure end of path is not /
     # e.g) lib (not lib/)
     @lib_path_list = map {
@@ -18,8 +18,9 @@ use lib @lib_path_list;
 use Pau;
 
 my $source = "";
-while(<STDIN>) {
+
+while (<STDIN>) {
     $source .= $_;
 }
 my $formatted = Pau->auto_use($source);
-print $formatted;
+print(STDOUT $formatted);
