@@ -62,13 +62,12 @@ sub find_exported_function {
 
     my $pkg = _filename_to_pkg($filename);
 
-    open my $fh, '>', "/dev/null";
     {
+        open my $fh, '>', "/dev/null";
         local *STDOUT = $fh;
         local *STDERR = $fh;
         eval "require $pkg";
     }
-    close $fh;
     return {
         package   => $pkg,
         functions => [ @{ $pkg . '::EXPORT' }, @{ $pkg . '::EXPORT_OK' } ],
