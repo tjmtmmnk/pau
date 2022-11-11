@@ -19,7 +19,10 @@ use constant {
 sub new {
     my ($self, $source) = @_;
     my $doc   = PPI::Document->new(\$source);
-    my $subs  = $doc->find('PPI::Statement::Sub');
+    my $subs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Sub') })     || [];
+    my $incs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Include') }) || [];
+    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
+    p $incs;
     my $stmts = $doc->find(
         sub {
             # e.g) sleep 1;
@@ -31,19 +34,36 @@ sub new {
                 # e.g) if(is_cat) {}
                 $_[1]->isa('PPI::Statement::Compound');
         }
-    );
+    ) || [];
+    my $stmts_without_incs = [];
+
+    for my $stmt (@$stmts) {
+        my $is_in_inc = 0;
+
+        for my $inc (@$incs) {
+            if ($stmt->descendant_of($inc)) {
+                $is_in_inc = 1;
+                last;
+            }
+        }
+
+        unless ($is_in_inc) {
+            push @$stmts_without_incs, $stmt;
+        }
+    }
+
     bless {
         doc   => $doc,
-        stmts => $stmts ? $stmts : [],
-        subs  => $subs  ? $subs  : [],
+        incs  => $incs,
+        stmts => $stmts_without_incs,
+        subs  => $subs,
     }, $self;
 }
 
 # includes may change by deleting
 sub get_includes {
     my $self = shift;
-    my $incs = $self->{doc}->find('PPI::Statement::Include');
-    return $incs ? $incs : [];
+    return $self->{incs};
 }
 
 # return: [Str]
@@ -56,7 +76,9 @@ sub get_declared_functions {
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->get_includes;
+    my $includes = $self->{incs};
+    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
+    p $includes;
     return $includes->[-1] if scalar(@$includes) > 0;
 
     my $pkg = $self->{doc}->find_first('PPI::Statement::Package');
@@ -68,7 +90,7 @@ sub get_insert_point {
 # return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
 sub get_use_statements {
     my $self     = shift;
-    my $includes = $self->get_includes;
+    my $includes = $self->{incs};
 
     my $use_statements = [];
 
