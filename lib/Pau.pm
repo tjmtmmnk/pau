@@ -152,7 +152,11 @@ sub auto_use {
     my $unused_current_use_stmts = [ grep { !$_->{using} } @$current_use_statements ];
 
     for my $unused_use_stmt (@$unused_current_use_stmts) {
-        $class->_delete_use_statement($unused_use_stmt->{stmt});
+        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } split(/ /, $ENV{DO_NOT_DELETE});
+
+        unless ($do_not_delete) {
+            $class->_delete_use_statement($unused_use_stmt->{stmt});
+        }
     }
 
     if ($ENV{DEBUG}) {

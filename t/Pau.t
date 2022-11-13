@@ -185,6 +185,51 @@ describe 'auto_use' => sub {
             end;
         }, 'can get sorted needed package';
     };
+    it 'can parse use statement with args' => sub {
+        my $filename   = 't/fixtures/UseFunctionH.pm';
+        my $plain      = read_file($filename);
+        my $plain_doc  = PPI::Document->new(\$plain);
+        my $plain_incs = $plain_doc->find('PPI::Statement::Include');
+        is $plain_incs, array {
+            item object {
+                call module => 'Creature::Human';
+            };
+            item object {
+                call module => 'Accessor';
+            };
+            item object {
+                call module => 'Deleted';
+            };
+            end;
+        };
+        my $formatted      = Pau->auto_use($plain);
+        my $formatted_doc  = PPI::Document->new(\$formatted);
+        my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
+        is $formatted_incs, array {
+            item object {
+                call module => 'Creature::Human';
+            };
+            end;
+        };
+    };
+    it 'can remain if DO_NOT_DELETE is specified' => sub {
+        my $filename = 't/fixtures/UseFunctionH.pm';
+        my $plain    = read_file($filename);
+        local $ENV{DO_NOT_DELETE} = 'Accessor';
+        my $formatted      = Pau->auto_use($plain);
+        my $formatted_doc  = PPI::Document->new(\$formatted);
+        my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
+        is $formatted_incs, array {
+            item object {
+                call module => 'Creature::Human';
+            };
+            item object {
+                call module => 'Accessor';
+            };
+            end;
+        };
+    };
+
 };
 
 done_testing;
