@@ -24,19 +24,12 @@ sub auto_use {
 
     my $extractor = Pau::Extract->new($source);
 
-    my $current_use_statements = $extractor->get_use_statements;
+    my $current_use_statements        = $extractor->get_use_statements;
+    my $current_pkg_to_use_statements = { map {
+            $_->{module} => $_
+    } @$current_use_statements };
 
-    for my $current_inc ($extractor->get_includes->@*) {
-        unless ($current_inc->pragma) {
-            if ($current_inc->next_sibling->isa('PPI::Token::Whitespace')) {
-                $current_inc->next_sibling->delete;
-            }
-            $current_inc->delete;
-        }
-    }
-
-    my $need_package_to_functions =
-        { map { $_->{module} => $_->{functions}, } @$current_use_statements, };
+    my $need_package_to_functions = {};
 
     my $need_packages = $extractor->get_function_packages;
 
@@ -143,13 +136,23 @@ sub auto_use {
         [ sort { lc($b) cmp lc($a) } keys %$need_package_to_functions ];
 
     for my $pkg (@$sorted_need_packages) {
-        my $functions =
-            join(' ', sort { lc($a) cmp lc($b) } uniq $need_package_to_functions->{$pkg}->@*);
-        my $stmt =
-            $functions eq ''
-            ? "use $pkg;"
-            : "use $pkg qw($functions);";
-        push @$statements, Pau::Convert->create_include_statement($stmt);
+        if (my $current_use_stmt = $current_pkg_to_use_statements->{$pkg}) {
+            $current_use_stmt->{using} = 1;
+        } else {
+            my $functions =
+                join(' ', sort { lc($a) cmp lc($b) } uniq $need_package_to_functions->{$pkg}->@*);
+            my $stmt =
+                $functions eq ''
+                ? "use $pkg;"
+                : "use $pkg qw($functions);";
+            push @$statements, Pau::Convert->create_include_statement($stmt);
+        }
+    }
+
+    my $unused_current_use_stmts = [ grep { !$_->{using} } @$current_use_statements ];
+
+    for my $unused_use_stmt (@$unused_current_use_stmts) {
+        $class->_delete_use_statement($unused_use_stmt->{stmt});
     }
 
     if ($ENV{DEBUG}) {
@@ -160,6 +163,28 @@ sub auto_use {
     $class->_insert_statements($extractor, $statements);
 
     return $extractor->{doc}->serialize;
+}
+
+sub _delete_use_statement {
+    my ($class, $use_stmt) = @_;
+
+    my $prev_sibling = $use_stmt->previous_sibling;
+
+    while ($prev_sibling && $prev_sibling->isa('PPI::Token::Comment')) {
+        my $prev_prev_sibling = $prev_sibling->previous_sibling;
+        $prev_sibling->delete;
+        $prev_sibling = $prev_prev_sibling;
+    }
+
+    my $next_sibling = $use_stmt->next_sibling;
+
+    while ($next_sibling && $next_sibling->isa('PPI::Token::Whitespace')) {
+        my $next_next_sibling = $next_sibling->next_sibling;
+        $next_sibling->delete;
+        $next_sibling = $next_next_sibling;
+    }
+
+    $use_stmt->delete;
 }
 
 sub _insert_statements {

@@ -24,39 +24,49 @@ describe 'get_use_statements' => sub {
         my $use_statements = $pau->get_use_statements;
         is $use_statements, array {
             item hash {
+                field 'stmt'           => D;
                 field 'type'           => 'use';
                 field 'module'         => 'Animal';
                 field 'module_version' => '';
                 field 'functions'      => [ 'cat', 'dog' ];
-                field 'no_import'      => 0;
+                field 'arg_list'       => U;
+                field 'using'          => 0;
             };
             item hash {
+                field 'stmt'           => D;
                 field 'type'           => 'use';
                 field 'module'         => 'Pen';
                 field 'module_version' => '';
                 field 'functions'      => [];
-                field 'no_import'      => 1;
+                field 'arg_list'       => D;
+                field 'using'          => 0;
             };
             item hash {
+                field 'stmt'           => D;
                 field 'type'           => 'no';
                 field 'module'         => 'Trap';
                 field 'module_version' => '';
                 field 'functions'      => [];
-                field 'no_import'      => 0;
+                field 'arg_list'       => U;
+                field 'using'          => 0;
             };
             item hash {
+                field 'stmt'           => D;
                 field 'type'           => 'use';
                 field 'module'         => 'Car';
                 field 'module_version' => '1.10';
                 field 'functions'      => [];
-                field 'no_import'      => 0;
+                field 'arg_list'       => U;
+                field 'using'          => 0;
             };
             item hash {
+                field 'stmt'           => D;
                 field 'type'           => 'require';
                 field 'module'         => 'Japan::Kyoto';
                 field 'module_version' => '';
                 field 'functions'      => [];
-                field 'no_import'      => 0;
+                field 'arg_list'       => U;
+                field 'using'          => 0;
             };
         }, 'no pragma';
     };

@@ -21,8 +21,6 @@ sub new {
     my $doc   = PPI::Document->new(\$source);
     my $subs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Sub') })     || [];
     my $incs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Include') }) || [];
-    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-    p $incs;
     my $stmts = $doc->find(
         sub {
             # e.g) sleep 1;
@@ -60,12 +58,6 @@ sub new {
     }, $self;
 }
 
-# includes may change by deleting
-sub get_includes {
-    my $self = shift;
-    return $self->{incs};
-}
-
 # return: [Str]
 sub get_declared_functions {
     my $self = shift;
@@ -77,8 +69,6 @@ sub get_declared_functions {
 sub get_insert_point {
     my $self     = shift;
     my $includes = $self->{incs};
-    use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
-    p $includes;
     return $includes->[-1] if scalar(@$includes) > 0;
 
     my $pkg = $self->{doc}->find_first('PPI::Statement::Package');
@@ -87,7 +77,16 @@ sub get_insert_point {
     return undef;
 }
 
-# return: [{ type => Str, module => Str, functions => [Str], no_import => Bool, version => Str }]
+# return:
+# [{
+#   stmt => PPI::Statement::Include,
+#   type => Str,
+#   module => Str,
+#   functions => [Str],
+#   version => Str,
+#   arg_list => Maybe[PPI::Structure::List],
+#   using => Bool,
+#  }]
 sub get_use_statements {
     my $self     = shift;
     my $includes = $self->{incs};
@@ -97,13 +96,15 @@ sub get_use_statements {
     for my $inc (@$includes) {
         next if $inc->pragma;
         my $statement = {
+            stmt           => $inc,
             type           => $inc->type,
             module         => $inc->module,
             module_version => $inc->module_version
-            ? $inc->module_version->content
-            : "",
-            functions => [],
-            no_import => 0,
+                ? $inc->module_version->content
+                : "",
+            functions      => [],
+            arg_list       => undef,
+            using          => 0,
         };
 
         my ($arg) = $inc->arguments;
@@ -113,9 +114,7 @@ sub get_use_statements {
                 $statement->{functions} = [ $arg->literal ];
             }
             elsif ($arg->isa('PPI::Structure::List')) {
-                if ($arg->content eq '()') {
-                    $statement->{no_import} = 1;
-                }
+                $statement->{arg_list} = $arg;
             }
         }
         push @$use_statements, $statement;
