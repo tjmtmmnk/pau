@@ -18,10 +18,26 @@ use constant {
 
 sub new {
     my ($self, $source) = @_;
-    my $doc   = PPI::Document->new(\$source);
-    my $subs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Sub') })     || [];
-    my $incs  = $doc->find(sub { $_[1]->isa('PPI::Statement::Include') }) || [];
-    my $stmts = $doc->find(
+    my $doc = PPI::Document->new(\$source);
+
+    bless {
+        doc => $doc,
+    }, $self;
+}
+
+sub get_sub_statements {
+    my $self = shift;
+    return $self->{doc}->find(sub { $_[1]->isa('PPI::Statement::Sub') }) || [];
+}
+
+sub get_include_statements {
+    my $self = shift;
+    return $self->{doc}->find(sub { $_[1]->isa('PPI::Statement::Include') }) || [];
+}
+
+sub get_statements {
+    my $self  = shift;
+    my $stmts = $self->{doc}->find(
         sub {
             # e.g) sleep 1;
             $_[1]->class eq 'PPI::Statement' ||
@@ -38,7 +54,7 @@ sub new {
     for my $stmt (@$stmts) {
         my $is_in_inc = 0;
 
-        for my $inc (@$incs) {
+        for my $inc ($self->get_include_statements->@*) {
             if ($stmt->descendant_of($inc)) {
                 $is_in_inc = 1;
                 last;
@@ -49,26 +65,20 @@ sub new {
             push @$stmts_without_incs, $stmt;
         }
     }
-
-    bless {
-        doc   => $doc,
-        incs  => $incs,
-        stmts => $stmts_without_incs,
-        subs  => $subs,
-    }, $self;
+    return $stmts_without_incs;
 }
 
 # return: [Str]
 sub get_declared_functions {
     my $self = shift;
-    my $subs = $self->{subs};
+    my $subs = $self->get_sub_statements;
     return [ map { $_->name } @$subs ];
 }
 
 # return: PPI::Statement::Include | PPI::Statement::Package
 sub get_insert_point {
     my $self     = shift;
-    my $includes = $self->{incs};
+    my $includes = $self->get_include_statements;
     return $includes->[-1] if scalar(@$includes) > 0;
 
     my $pkg = $self->{doc}->find_first('PPI::Statement::Package');
@@ -89,7 +99,7 @@ sub get_insert_point {
 #  }]
 sub get_use_statements {
     my $self     = shift;
-    my $includes = $self->{incs};
+    my $includes = $self->get_include_statements;
 
     my $use_statements = [];
 
@@ -100,11 +110,11 @@ sub get_use_statements {
             type           => $inc->type,
             module         => $inc->module,
             module_version => $inc->module_version
-                ? $inc->module_version->content
-                : "",
-            functions      => [],
-            arg_list       => undef,
-            using          => 0,
+            ? $inc->module_version->content
+            : "",
+            functions => [],
+            arg_list  => undef,
+            using     => 0,
         };
 
         my ($arg) = $inc->arguments;
