@@ -13,6 +13,7 @@ BEGIN {
     } split(/ /, $ENV{PAU_LIB_PATH_LIST});
 }
 
+use lib qw(/app/cpan/lib/perl5 /app/lib);
 use lib @lib_path_list;
 
 use Pau;
