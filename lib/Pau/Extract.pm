@@ -162,7 +162,7 @@ sub get_function_packages {
 
     my $packages = [];
 
-    for my $stmt ($self->{stmts}->@*) {
+    for my $stmt ($self->get_statements->@*) {
         my $words = $stmt->find('PPI::Token::Word');
         next unless $words;
 
@@ -189,7 +189,7 @@ sub get_functions {
 
     my $functions = [];
 
-    for my $stmt ($self->{stmts}->@*) {
+    for my $stmt ($self->get_statements->@*) {
         my $words = $stmt->find('PPI::Token::Word');
         next unless $words;
 
