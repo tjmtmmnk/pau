@@ -135,10 +135,33 @@ sub auto_use {
     my $sorted_need_packages =
         [ sort { lc($b) cmp lc($a) } keys %$need_package_to_functions ];
 
-    for my $pkg (@$sorted_need_packages) {
-        if (my $current_use_stmt = $current_pkg_to_use_statements->{$pkg}) {
-            $current_use_stmt->{using} = 1;
+    my $should_create_include_stmt = sub {
+        my ($current_use_stmt, $need_functions) = @_;
+
+        if (defined $current_use_stmt) {
+            if (my $current_use_functions = $current_use_stmt->{functions}) {
+                my $all_contain = 1;
+
+                for my $need_function (@$need_functions) {
+                    my $is_contain = grep { $_ eq $need_function } @$current_use_functions;
+
+                    unless ($is_contain > 0) {
+                        $all_contain = 0;
+                        last;
+                    }
+                }
+                return !$all_contain;
+            }
+            else {
+                return 0;
+            }
         } else {
+            return 1;
+        }
+    };
+
+    for my $pkg (@$sorted_need_packages) {
+        if ($should_create_include_stmt->($current_pkg_to_use_statements->{$pkg}, $need_package_to_functions->{$pkg})) {
             my $functions =
                 join(' ', sort { lc($a) cmp lc($b) } uniq $need_package_to_functions->{$pkg}->@*);
             my $stmt =
@@ -146,6 +169,8 @@ sub auto_use {
                 ? "use $pkg;"
                 : "use $pkg qw($functions);";
             push @$statements, Pau::Convert->create_include_statement($stmt);
+        } else {
+            $current_pkg_to_use_statements->{$pkg}->{using} = 1;
         }
     }
 

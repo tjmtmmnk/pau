@@ -195,6 +195,10 @@ describe 'auto_use' => sub {
                 call module => 'Creature::Human';
             };
             item object {
+                call module    => 'ExportB';
+                call arguments => 1;
+            };
+            item object {
                 call module => 'Accessor';
             };
             item object {
@@ -202,6 +206,13 @@ describe 'auto_use' => sub {
             };
             end;
         };
+        my ($arg_ExportB) = $plain_incs->[1]->arguments;
+        my $literalB = [ $arg_ExportB->literal ];
+        is $literalB, array {
+            item 'create_cat';
+            end;
+        };
+
         my $formatted      = Pau->auto_use($plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -209,8 +220,19 @@ describe 'auto_use' => sub {
             item object {
                 call module => 'Creature::Human';
             };
+            item object {
+                call module    => 'ExportB';
+                call arguments => 1;
+            };
             end;
         };
+        my ($arg_ExportB2) = $formatted_incs->[1]->arguments;
+        my $literalB2 = [ $arg_ExportB2->literal ];
+        is $literalB2, array {
+            item 'create_cat';
+            item 'is_cat';
+            end;
+        }, 'added is_cat';
     };
     it 'can remain if DO_NOT_DELETE is specified' => sub {
         my $filename = 't/fixtures/UseFunctionH.pm';
@@ -225,6 +247,10 @@ describe 'auto_use' => sub {
             };
             item object {
                 call module => 'Accessor';
+            };
+            item object {
+                call module    => 'ExportB';
+                call arguments => 1;
             };
             end;
         };
