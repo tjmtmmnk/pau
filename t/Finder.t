@@ -1,3 +1,7 @@
+BEGIN {
+    $ENV{PAU_LIB_PATH_LIST} = 't/fixtures/lib';
+}
+
 use Test2::V0;
 use Test2::Tools::Spec;
 use Pau::Finder;

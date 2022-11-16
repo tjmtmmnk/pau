@@ -1,7 +1,13 @@
+BEGIN {
+    $ENV{PAU_LIB_PATH_LIST} = 't/fixtures/lib';
+}
+
 use Test2::V0;
 use Test2::Tools::Spec;
 use Pau;
 use File::Slurp qw(read_file);
+
+local $ENV{NO_CACHE} = 1;
 
 describe 'auto_use' => sub {
     it 'exist pragma use' => sub {
