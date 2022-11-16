@@ -8,7 +8,7 @@ use Module::CoreList;
 my @lib_path_list;
 
 BEGIN {
-    unless(defined $ENV{PAU_LIB_PATH_LIST}) {
+    unless (defined $ENV{PAU_LIB_PATH_LIST}) {
         $ENV{PAU_LIB_PATH_LIST} = '';
     }
     # assure end of path is not /
@@ -67,8 +67,10 @@ sub find_exported_function {
 
     {
         open my $fh, '>', "/dev/null";
-        local *STDOUT = $fh;
-        local *STDERR = $fh;
+        local *STDOUT             = $fh;
+        local *STDERR             = $fh;
+        local *CORE::GLOBAL::exit = sub { };
+        local *CORE::GLOBAL::die  = sub { };
         eval "require $pkg";
     }
     return {
