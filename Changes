@@ -3,6 +3,9 @@ Revision history for Perl extension Pau
 
 {{$NEXT}}
 
+0.03 2022-11-16T00:42:50Z
+    - can install
+
 0.02 2022-11-16T00:21:18Z
     - Test
 
