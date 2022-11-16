@@ -11,17 +11,18 @@ use Pau::Finder;
 use PPI::Token::Whitespace;
 use List::Util qw(uniq);
 use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
+use Carp qw(croak);
 
 use List::Util qw(first);
-
-use constant {
-    CACHE_FILE_FUNCTIONS             => '/app/.cache/functions.json',
-    CACHE_FILE_CORE_MODULE_FUNCTIONS => '/app/.cache/core-functions.json',
-};
 
 BEGIN {
     $ENV{DEBUG} //= 0;
 }
+
+use constant {
+    CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'functions.json')      : undef,
+    CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'core-functions.json') : undef,
+};
 
 # auto add and delete package
 sub auto_use {
@@ -66,6 +67,9 @@ sub auto_use {
     }
 
     my $pkg_to_functions = {};
+
+    my $should_set_cache_dir = $ENV{NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
+    croak 'Please set PAU_CACHE_DIR environment variable' if $should_set_cache_dir;
 
     if ($ENV{NO_CACHE}) {
         my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
