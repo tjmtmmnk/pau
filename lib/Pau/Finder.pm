@@ -8,6 +8,9 @@ use Module::CoreList;
 my @lib_path_list;
 
 BEGIN {
+    unless(defined $ENV{PAU_LIB_PATH_LIST}) {
+        $ENV{PAU_LIB_PATH_LIST} = '';
+    }
     # assure end of path is not /
     # e.g) lib (not lib/)
     @lib_path_list = map {

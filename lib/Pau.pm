@@ -39,7 +39,7 @@ sub auto_use {
     }
 
     for my $pkg (@$need_packages) {
-        my $already_used = scalar $need_package_to_functions->{$pkg}->@* > 0;
+        my $already_used = defined $need_package_to_functions->{$pkg} && scalar $need_package_to_functions->{$pkg}->@* > 0;
 
         unless ($already_used) {
             $need_package_to_functions->{$pkg} = [];
