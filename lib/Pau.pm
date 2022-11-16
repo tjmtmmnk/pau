@@ -1,4 +1,9 @@
 package Pau;
+use strict;
+use warnings;
+
+our $VERSION = "0.01";
+
 use Pau::Extract;
 use Pau::Convert;
 use Pau::Util;
@@ -253,3 +258,31 @@ sub _func_to_package {
 }
 
 1;
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+Pau - It's new $module
+
+=head1 SYNOPSIS
+
+    use Pau;
+
+=head1 DESCRIPTION
+
+Pau is ...
+
+=head1 LICENSE
+
+Copyright (C) tjmtmmnk.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+tjmtmmnk E<lt>tjmtmmnk@gmail.comE<gt>
+
+=cut

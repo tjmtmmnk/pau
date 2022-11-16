@@ -6,10 +6,10 @@ DISTRIBUTIONS
       Canary::Stability 2013
     requirements:
       ExtUtils::MakeMaker 0
-  Clone-0.45
-    pathname: A/AT/ATOOMIC/Clone-0.45.tar.gz
+  Clone-0.46
+    pathname: G/GA/GARU/Clone-0.46.tar.gz
     provides:
-      Clone 0.45
+      Clone 0.46
     requirements:
       ExtUtils::MakeMaker 0
   Data-Printer-1.000004
@@ -110,7 +110,7 @@ DISTRIBUTIONS
       File::Spec 3.00
       File::Spec::Functions 0
       if 0
-      perl 5.005030
+      perl 5.00503
       strict 0
   PPI-1.274
     pathname: O/OA/OALDERS/PPI-1.274.tar.gz
@@ -240,6 +240,16 @@ DISTRIBUTIONS
       Scalar::Util 1.18
       XSLoader 0.22
       parent 0
+  Scalar-List-Utils-1.59
+    pathname: P/PE/PEVANS/Scalar-List-Utils-1.59.tar.gz
+    provides:
+      List::Util 1.59
+      List::Util::XS 1.59
+      Scalar::Util 1.59
+      Sub::Util 1.59
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.006
   Scope-Guard-0.21
     pathname: C/CH/CHOCOLATE/Scope-Guard-0.21.tar.gz
     provides:
