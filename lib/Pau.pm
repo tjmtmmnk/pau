@@ -16,12 +16,14 @@ use Carp qw(croak);
 use List::Util qw(first);
 
 BEGIN {
+    $ENV{NO_CACHE} //= 1;
     $ENV{DEBUG} //= 0;
+    $ENV{DO_NOT_DELETE} //= '';
 }
 
 use constant {
-    CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'functions.json')      : undef,
-    CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'core-functions.json') : undef,
+    CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-functions.json')      : undef,
+    CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-core-functions.json') : undef,
 };
 
 # auto add and delete package
@@ -69,7 +71,7 @@ sub auto_use {
     my $pkg_to_functions = {};
 
     my $should_set_cache_dir = $ENV{NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
-    croak 'Please set PAU_CACHE_DIR environment variable' if $should_set_cache_dir;
+    croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
 
     if ($ENV{NO_CACHE}) {
         my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
