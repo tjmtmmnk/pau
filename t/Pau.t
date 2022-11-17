@@ -240,10 +240,10 @@ describe 'auto_use' => sub {
             end;
         }, 'added is_cat';
     };
-    it 'can remain if DO_NOT_DELETE is specified' => sub {
+    it 'can remain if PAU_DO_NOT_DELETE is specified' => sub {
         my $filename = 't/fixtures/UseFunctionH.pm';
         my $plain    = read_file($filename);
-        local $ENV{DO_NOT_DELETE} = 'Accessor';
+        local $ENV{PAU_DO_NOT_DELETE} = 'Accessor';
         my $formatted      = Pau->auto_use($plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
