@@ -292,7 +292,7 @@ Pau inserts use-statement if not exist, and deletes use-statement if not used.
 
 =over
 
-=item* C<< PAU_LIB_PATH_LIST >>
+=item * C<< PAU_LIB_PATH_LIST >>
 
 default: C<< '' >>.
 Please set your using library, separated by spaces.
@@ -301,17 +301,17 @@ For example,
 
     PAU_LIB_PATH_LIST='/cpan/lib/perl5 /app/your_project/lib'
 
-=item* C<< PAU_NO_CACHE >>
+=item * C<< PAU_NO_CACHE >>
 
 default: C<< TRUE >>.
 If set to FALSE, create cache file for avoiding repeatedly loading exported functions.
 
-=item* C<< PAU_CACHE_DIR >>
+=item * C<< PAU_CACHE_DIR >>
 
 If you set PAU_NO_CACHE=TRUE, you must set this value.
 This value indicates under which directory the cache file should be created.
 
-=item* C<< PAU_DO_NOT_DELETE >>
+=item * C<< PAU_DO_NOT_DELETE >>
 
 default: C<< '' >>.
 Pau delete unused include-statement automatically. This value prevents from incorrect deleting.
