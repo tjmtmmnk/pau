@@ -16,9 +16,9 @@ use Carp qw(croak);
 use List::Util qw(first);
 
 BEGIN {
-    $ENV{NO_CACHE} //= 1;
+    $ENV{PAU_NO_CACHE} //= 1;
     $ENV{DEBUG} //= 0;
-    $ENV{DO_NOT_DELETE} //= '';
+    $ENV{PAU_DO_NOT_DELETE} //= '';
 }
 
 use constant {
@@ -70,10 +70,10 @@ sub auto_use {
 
     my $pkg_to_functions = {};
 
-    my $should_set_cache_dir = $ENV{NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
+    my $should_set_cache_dir = $ENV{PAU_NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
     croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
 
-    if ($ENV{NO_CACHE}) {
+    if ($ENV{PAU_NO_CACHE}) {
         my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
         $pkg_to_functions = {%$core_pkg_to_functions};
 
@@ -188,7 +188,7 @@ sub auto_use {
     my $unused_current_use_stmts = [ grep { !$_->{using} } @$current_use_statements ];
 
     for my $unused_use_stmt (@$unused_current_use_stmts) {
-        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } split(/ /, $ENV{DO_NOT_DELETE});
+        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } split(/ /, $ENV{PAU_DO_NOT_DELETE});
 
         unless ($do_not_delete) {
             $class->_delete_use_statement($unused_use_stmt->{stmt});

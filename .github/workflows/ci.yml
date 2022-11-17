@@ -18,5 +18,5 @@ jobs:
           image: test-image:latest
           run: |
             export PAU_LIB_PATH_LIST='t/fixtures/lib'
-            export NO_CACHE=1
+            export PAU_NO_CACHE=1
             carton exec -- prove -lvr -I t/fixtures/lib t/
