@@ -2,7 +2,7 @@ package Pau;
 use strict;
 use warnings;
 
-our $VERSION = "0.06";
+our $VERSION = "0.07";
 
 use Pau::Extract;
 use Pau::Convert;
