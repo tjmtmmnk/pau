@@ -8,7 +8,7 @@ use Try::Tiny;
 sub last_modified_at {
     my ($class, $filename) = @_;
     my $stat = [ stat $filename ];
-    return scalar($stat) > 0 ? $stat->[9] : 0;
+    return scalar(@$stat) > 0 ? $stat->[9] : 0;
 }
 
 sub read_json_file {
