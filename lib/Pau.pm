@@ -278,7 +278,31 @@ Pau - It's new $module
 
 =head1 DESCRIPTION
 
-Pau is ...
+Pau is auto use tool.
+
+=head2 Usage
+This example reads from stdin and print auto-used document to stdout.
+
+    use Pau;
+    my $source = "";
+
+    while (<STDIN>) {
+        $source .= $_;
+    }
+    my $formatted = Pau->auto_use($source);
+    print(STDOUT $formatted);
+
+=head2 Environment Variables
+C<< PAU_LIB_PATH_LIST >>: default ''. Please set your using library, separated by spaces.
+For example
+
+    PAU_LIB_PATH_LIST='/cpan/lib/perl5 /app/your_project/lib'
+
+C<< PAU_PAU_NO_CACHE >>: default TRUE. If set to FALSE, create cache file for avoiding repeatedly loading exported functions.
+
+C<< PAU_CACHE_DIR >>: If you set PAU_NO_CACHE=TRUE, you must set this value. This value indicates under which directory the cache file should be created.
+
+C<< PAU_DO_NOT_DELETE >>: Pau delete unused include-statement automatically. This value prevents from incorrect deleting.
 
 =head1 LICENSE
 
