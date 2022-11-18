@@ -12,12 +12,14 @@ use PPI::Token::Whitespace;
 use List::Util qw(uniq);
 use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 use Carp qw(croak);
+use Module::CoreList;
+use File::Slurp qw(read_file);
 
 use List::Util qw(first);
 
 BEGIN {
-    $ENV{PAU_NO_CACHE} //= 1;
-    $ENV{DEBUG} //= 0;
+    $ENV{PAU_NO_CACHE}      //= 1;
+    $ENV{PAU_DEBUG}         //= 0;
     $ENV{PAU_DO_NOT_DELETE} //= '';
 }
 
@@ -25,6 +27,17 @@ use constant {
     CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-functions.json')      : undef,
     CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-core-functions.json') : undef,
 };
+
+our $is_interactive = 0;
+
+sub auto_use_interactive {
+    my ($class, $filename) = @_;
+    my $source = read_file($filename);
+    croak 'can not open file' unless defined $source;
+
+    local $is_interactive = 1;
+    return $class->auto_use($source);
+}
 
 # auto add and delete package
 sub auto_use {
@@ -41,7 +54,7 @@ sub auto_use {
 
     my $need_packages = $extractor->get_function_packages;
 
-    if ($ENV{DEBUG}) {
+    if ($ENV{PAU_DEBUG}) {
         p "need packages";
         p $need_packages;
     }
@@ -56,14 +69,14 @@ sub auto_use {
 
     my $used_functions = $extractor->get_functions;
 
-    if ($ENV{DEBUG}) {
+    if ($ENV{PAU_DEBUG}) {
         p "used functions";
         p $used_functions;
     }
 
     my $lib_files = Pau::Finder->get_lib_files;
 
-    if ($ENV{DEBUG}) {
+    if ($ENV{PAU_DEBUG}) {
         p "lib files";
         p $lib_files;
     }
@@ -113,29 +126,48 @@ sub auto_use {
         Pau::Util->write_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS, $cached_core_pkg_to_functions) if $should_save_core_pkg_to_functions;
     }
 
-    my $func_to_pkgs = {
-        map {
-            my $pkg   = $_;
-            my $funcs = $pkg_to_functions->{$pkg};
-            map {
-                $_ => $pkg,
-            } @$funcs,
-        } keys %$pkg_to_functions,
-    };
+    if ($ENV{PAU_DEBUG}) {
+        p "pkg to functions";
 
-    if ($ENV{DEBUG}) {
-        p "func to pkgs";
-        p $func_to_pkgs;
+        for my $pkg (keys %$pkg_to_functions) {
+            if (scalar $pkg_to_functions->{$pkg}->@* > 0) {
+                p sprintf("%s (%s)", $pkg, join(',', $pkg_to_functions->{$pkg}->@*));
+            }
+        }
+    }
+
+    my $func_to_pkg = {};
+
+    for my $pkg (keys %$pkg_to_functions) {
+        for my $func ($pkg_to_functions->{$pkg}->@*) {
+            my $is_used_func = grep { $_ eq $func } @$used_functions;
+            next unless $is_used_func;
+
+            if (defined $func_to_pkg->{$func}) {
+                if ($is_interactive) {
+                    my $pkgs         = [ $func_to_pkg->{$func}, $pkg ];
+                    my $selected_pkg = $class->_select_pkg_interactively($func, $pkgs);
+                    $func_to_pkg->{$func} = $selected_pkg;
+                }
+            } else {
+                $func_to_pkg->{$func} = $pkg;
+            }
+        }
+    }
+
+    if ($ENV{PAU_DEBUG}) {
+        p "func to pkg";
+        p $func_to_pkg;
     }
 
     for my $func (@$used_functions) {
-        if (my $pkg = $func_to_pkgs->{$func}) {
+        if (my $pkg = $func_to_pkg->{$func}) {
             $need_package_to_functions->{$pkg} //= [];
             push $need_package_to_functions->{$pkg}->@*, $func;
         }
     }
 
-    if ($ENV{DEBUG}) {
+    if ($ENV{PAU_DEBUG}) {
         p "need pkg to funcs";
         p $need_package_to_functions;
     }
@@ -195,7 +227,7 @@ sub auto_use {
         }
     }
 
-    if ($ENV{DEBUG}) {
+    if ($ENV{PAU_DEBUG}) {
         p "statements";
         p $statements;
     }
@@ -203,6 +235,32 @@ sub auto_use {
     $class->_insert_statements($extractor, $statements);
 
     return $extractor->{doc}->serialize;
+}
+
+sub _select_pkg_interactively {
+    my ($class, $func, $pkgs) = @_;
+    my $choices = [];
+    my $i       = 0;
+
+    die 'invalid num of pkgs' if scalar @$pkgs == 0;
+    return $pkgs->[0]         if scalar @$pkgs == 1;
+
+    print("Function $func is exported in multiple packages\n");
+
+    for my $pkg (@$pkgs) {
+        push @$choices, sprintf("%d: %s", $i + 1, $pkg);
+        $i++;
+    }
+    my $num_of_choices = scalar @$choices;
+    print("Please select 1~@{[ $num_of_choices ]}\n");
+    print(join("\t", @$choices));
+    print("\n");
+
+    chomp(my $input = <STDIN>);
+    my $selected_pkg = $pkgs->[ $input - 1 ];
+    croak "invalid input. range over" unless defined $selected_pkg;
+
+    return $selected_pkg;
 }
 
 sub _delete_use_statement {
