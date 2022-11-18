@@ -3,6 +3,9 @@ Revision history for Perl extension Pau
 
 {{$NEXT}}
 
+0.09 2022-11-18T00:54:24Z
+    - can select use package interactively
+
 0.08 2022-11-17T23:08:20Z
     - update document
 
