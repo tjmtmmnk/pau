@@ -25,7 +25,7 @@ describe 'auto_use' => sub {
             end;
         }, 'can get only pragma';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -59,7 +59,7 @@ describe 'auto_use' => sub {
         my $plain_incs = $plain_doc->find('PPI::Statement::Include');
         is $plain_incs, "", 'no use';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -84,7 +84,7 @@ describe 'auto_use' => sub {
             };
         }, 'can get only pragma';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -138,7 +138,7 @@ describe 'auto_use' => sub {
             end;
         }, 'used';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -155,7 +155,7 @@ describe 'auto_use' => sub {
         my $plain_incs = $plain_doc->find('PPI::Statement::Include');
         is $plain_incs, "", 'no use';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -178,7 +178,7 @@ describe 'auto_use' => sub {
         my $plain_incs = $plain_doc->find('PPI::Statement::Include');
         is $plain_incs, "", 'no use';
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -219,7 +219,7 @@ describe 'auto_use' => sub {
             end;
         };
 
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {
@@ -244,7 +244,7 @@ describe 'auto_use' => sub {
         my $filename = 't/fixtures/UseFunctionH.pm';
         my $plain    = read_file($filename);
         local $ENV{PAU_DO_NOT_DELETE} = 'Accessor';
-        my $formatted      = Pau->auto_use($plain);
+        my $formatted      = Pau->auto_use(source => $plain);
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
         is $formatted_incs, array {

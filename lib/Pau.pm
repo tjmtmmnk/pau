@@ -12,12 +12,14 @@ use PPI::Token::Whitespace;
 use List::Util qw(uniq);
 use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 use Carp qw(croak);
+use Module::CoreList;
+use Smart::Args::TypeTiny qw(args);
 
 use List::Util qw(first);
 
 BEGIN {
-    $ENV{PAU_NO_CACHE} //= 1;
-    $ENV{DEBUG} //= 0;
+    $ENV{PAU_NO_CACHE}      //= 1;
+    $ENV{DEBUG}             //= 0;
     $ENV{PAU_DO_NOT_DELETE} //= '';
 }
 
@@ -28,7 +30,12 @@ use constant {
 
 # auto add and delete package
 sub auto_use {
-    my ($class, $source) = @_;
+    args my $class => 'ClassName',
+        my $source => 'Str',
+        ;
+
+    my $should_set_cache_dir = $ENV{PAU_NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
+    croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
 
     my $extractor = Pau::Extract->new($source);
 
@@ -68,50 +75,10 @@ sub auto_use {
         p $lib_files;
     }
 
-    my $pkg_to_functions = {};
-
-    my $should_set_cache_dir = $ENV{PAU_NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
-    croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
-
-    if ($ENV{PAU_NO_CACHE}) {
-        my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
-        $pkg_to_functions = {%$core_pkg_to_functions};
-
-        for my $lib_file (@$lib_files) {
-            my $func = Pau::Finder->find_exported_function($lib_file);
-            $pkg_to_functions->{ $func->{package} } = $func->{functions};
-        }
-    }
-    else {
-        my $cached_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS) // {};
-        $pkg_to_functions = {%$cached_pkg_to_functions};
-
-        my $cached_core_pkg_to_functions      = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS);
-        my $should_save_core_pkg_to_functions = !defined $cached_core_pkg_to_functions;
-
-        $cached_core_pkg_to_functions //= Pau::Finder->find_core_module_exported_functions;
-        $pkg_to_functions = { %$pkg_to_functions, %$cached_core_pkg_to_functions };
-
-        my $last_cached_at  = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
-        my $stale_lib_files = [];
-
-        for my $lib_file (@$lib_files) {
-            my $last_modified_at = Pau::Util->last_modified_at($lib_file);
-
-            my $is_stale = $last_modified_at > $last_cached_at;
-            push @$stale_lib_files, $lib_file if $is_stale;
-        }
-        # partial cache update
-        # update only stale package
-        for my $lib_file (@$stale_lib_files) {
-            my $func = Pau::Finder->find_exported_function($lib_file);
-            $pkg_to_functions->{ $func->{package} } = $func->{functions};
-        }
-
-        my $should_save_pkg_to_functions = scalar(@$stale_lib_files) > 0;
-        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS,             $pkg_to_functions)             if $should_save_pkg_to_functions;
-        Pau::Util->write_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS, $cached_core_pkg_to_functions) if $should_save_core_pkg_to_functions;
-    }
+    my $pkg_to_functions = $class->_collect(
+        lib_files => $lib_files,
+        use_cache => 0,
+    );
 
     my $func_to_pkgs = {
         map {
@@ -203,6 +170,70 @@ sub auto_use {
     $class->_insert_statements($extractor, $statements);
 
     return $extractor->{doc}->serialize;
+}
+
+# returns: HashRef[pkg => functions]
+sub _collect {
+    args my $class    => 'ClassName',
+        my $lib_files => 'ArrayRef[Str]',
+        my $use_cache => 'Bool',
+        ;
+
+    if ($use_cache) {
+        my $pkg_to_functions = {};
+
+        my $core_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS) //= Pau::Finder->find_core_module_exported_functions;
+        $pkg_to_functions = {
+            %$pkg_to_functions,
+            %$core_pkg_to_functions,
+        };
+
+        my $last_cached_at = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
+
+        my $stale_lib_files = [ grep {
+                my $last_modified_at = Pau::Util->last_modified_at($_);
+                $last_modified_at > $last_cached_at;
+        } @$lib_files ];
+
+        $pkg_to_functions = {
+            %$pkg_to_functions,
+            Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS)->%*,
+        };
+
+        # partial cache update
+        # update only stale package
+        for my $lib_file (@$stale_lib_files) {
+            my $func = Pau::Finder->find_exported_function($lib_file);
+
+            if (scalar $func->{functions}->@* > 0) {
+                $pkg_to_functions->{ $func->{package} } = $func->{functions};
+            }
+        }
+
+        my $should_save_pkg_to_functions      = scalar(@$stale_lib_files) > 0;
+        my $should_save_core_pkg_to_functions = !defined $core_pkg_to_functions;
+        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS,             $pkg_to_functions)      if $should_save_pkg_to_functions;
+        Pau::Util->write_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS, $core_pkg_to_functions) if $should_save_core_pkg_to_functions;
+
+        return $pkg_to_functions;
+    } else {
+        my $pkg_to_functions = {};
+
+        my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
+        $pkg_to_functions = {
+            %$pkg_to_functions,
+            %$core_pkg_to_functions,
+        };
+
+        for my $lib_file (@$lib_files) {
+            my $func = Pau::Finder->find_exported_function($lib_file);
+
+            if (scalar $func->{functions}->@* > 0) {
+                $pkg_to_functions->{ $func->{package} } = $func->{functions};
+            }
+        }
+        return $pkg_to_functions;
+    }
 }
 
 sub _delete_use_statement {
