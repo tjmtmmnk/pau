@@ -43,11 +43,14 @@
       "runtime" : {
          "requires" : {
             "Data::Printer" : "== 1.000004",
+            "Data::UUID" : "== 1.226",
             "File::Slurp" : "== 9999.32",
             "JSON::XS" : "== 4.03",
             "List::Util" : "== 1.59",
             "Module::CoreList" : "== 5.20220920",
             "PPI" : "== 1.274",
+            "Smart::Args::TypeTiny" : "== 0.13",
+            "Symbol::Get" : "== 0.10",
             "Try::Tiny" : "== 0.31"
          }
       },
@@ -71,7 +74,7 @@
          "web" : "https://github.com/tjmtmmnk/pau"
       }
    },
-   "version" : "0.08",
+   "version" : "0.081",
    "x_contributors" : [
       "momochi29 <31027514+tjmtmmnk@users.noreply.github.com>"
    ],
