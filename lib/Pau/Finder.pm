@@ -91,7 +91,10 @@ use $module_name;
 our \@__EXPORTABLES;
 
 BEGIN {
-    \@__EXPORTABLES = (Symbol::Get::get('\@$module_name\::EXPORT')->@*, Symbol::Get::get('\@$module_name\::EXPORT_OK')->@*);
+    \@__EXPORTABLES = (
+        (defined Symbol::Get::get('\@$module_name\::EXPORT') ? Symbol::Get::get('\@$module_name\::EXPORT')->@* : ()),
+        (defined Symbol::Get::get('\@$module_name\::EXPORT_OK') ? Symbol::Get::get('\@$module_name\::EXPORT_OK')->@* : ()),
+    );
 }
 1;
 EOF
