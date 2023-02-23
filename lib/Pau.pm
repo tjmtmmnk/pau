@@ -262,7 +262,7 @@ sub _collect {
         };
 
         my $should_save_pkg_to_functions      = scalar(@$stale_lib_files) > 0;
-        my $should_save_core_pkg_to_functions = Pau::Util->last_modified_at($core_pkg_to_functions) == 0;
+        my $should_save_core_pkg_to_functions = Pau::Util->last_modified_at($core_functions_cache_file) == 0;
         Pau::Util->write_json_file($functions_cache_file,      $pkg_to_functions)      if $should_save_pkg_to_functions;
         Pau::Util->write_json_file($core_functions_cache_file, $core_pkg_to_functions) if $should_save_core_pkg_to_functions;
 
