@@ -8,6 +8,7 @@ requires 'List::Util',            '== 1.59';
 requires 'Smart::Args::TypeTiny', '== 0.13';
 requires 'Data::UUID',            '== 1.226';
 requires 'Symbol::Get',           '== 0.10';
+requires 'Parallel::ForkManager', '== 2.02';
 
 on 'test' => sub {
     requires 'Test2',        '== 1.302191';

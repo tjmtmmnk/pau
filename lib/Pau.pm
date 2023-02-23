@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
-our $VERSION = "0.083";
+our $VERSION = "0.084";
 
 use Pau::Extract;
 use Pau::Convert;
@@ -237,16 +237,28 @@ sub _collect {
             %$core_pkg_to_functions,
         };
 
+        use Parallel::ForkManager;
+        my $pm = Parallel::ForkManager->new(4);
+        $pm->run_on_finish(
+            sub {
+                my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $func) = @_;
+
+                if (defined($func)) {
+                    $pkg_to_functions->{ $func->{package} } = $func->{functions};
+                }
+            }
+        );
+
         for my $lib_file (@$lib_files) {
+            $pm->start and next;
             my $func = Pau::Finder->find_exported_function(
                 filename  => $lib_file,
                 lib_paths => $lib_paths,
             );
-
-            if (scalar $func->{functions}->@* > 0) {
-                $pkg_to_functions->{ $func->{package} } = $func->{functions};
-            }
+            $pm->finish(0, $func);
         }
+        $pm->wait_all_children;
+
         return $pkg_to_functions;
     }
 }

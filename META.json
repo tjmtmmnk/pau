@@ -49,6 +49,7 @@
             "List::Util" : "== 1.59",
             "Module::CoreList" : "== 5.20220920",
             "PPI" : "== 1.274",
+            "Parallel::ForkManager" : "== 2.02",
             "Smart::Args::TypeTiny" : "== 0.13",
             "Symbol::Get" : "== 0.10",
             "Try::Tiny" : "== 0.31"
@@ -74,7 +75,7 @@
          "web" : "https://github.com/tjmtmmnk/pau"
       }
    },
-   "version" : "0.083",
+   "version" : "0.084",
    "x_contributors" : [
       "momochi29 <31027514+tjmtmmnk@users.noreply.github.com>"
    ],
