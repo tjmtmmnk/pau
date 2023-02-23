@@ -1,14 +1,10 @@
-BEGIN {
-    $ENV{PAU_LIB_PATH_LIST} = 't/fixtures/lib';
-}
-
 use Test2::V0;
 use Test2::Tools::Spec;
 use Pau::Finder;
 
 describe 'get_lib_files' => sub {
     it 'can find nested files' => sub {
-        my $files = Pau::Finder->get_lib_files;
+        my $files = Pau::Finder->get_lib_files(lib_paths => ['t/fixtures/lib']);
         is $files, bag {
             item 't/fixtures/lib/C.pm';
             item 't/fixtures/lib/ExportA.pm';
@@ -34,9 +30,13 @@ describe 'find_core_module_exported_functions' => sub {
 };
 
 describe 'find_exported_functions' => sub {
+    unshift @INC, 't/fixtures/lib';    # unshifted in Pau.pm, so this is just only for test purpose
+
     it 'can find exported functions' => sub {
-        my $functions =
-            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+        my $functions = Pau::Finder->find_exported_function(
+            filename  => 't/fixtures/lib/ExportA.pm',
+            lib_paths => ['t/fixtures/lib'],
+        );
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {
@@ -46,8 +46,10 @@ describe 'find_exported_functions' => sub {
         }, 'can find @EXPORT and @EXPORT_OK';
     };
     it 'can find multiple file' => sub {
-        my $functions =
-            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+        my $functions = Pau::Finder->find_exported_function(
+            filename  => 't/fixtures/lib/ExportA.pm',
+            lib_paths => ['t/fixtures/lib'],
+        );
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {
@@ -57,8 +59,10 @@ describe 'find_exported_functions' => sub {
             };
         };
 
-        my $functions2 =
-            Pau::Finder->find_exported_function('t/fixtures/lib/ExportB.pm');
+        my $functions2 = Pau::Finder->find_exported_function(
+            filename  => 't/fixtures/lib/ExportB.pm',
+            lib_paths => ['t/fixtures/lib'],
+        );
         is $functions2, hash {
             field package   => 'ExportB';
             field functions => array {
@@ -71,9 +75,10 @@ describe 'find_exported_functions' => sub {
         };
     };
     it 'even if lib path end with /' => sub {
-        local $ENV{PAU_LIB_PATH_LIST} = 't/fixtures/lib/';
-        my $functions =
-            Pau::Finder->find_exported_function('t/fixtures/lib/ExportA.pm');
+        my $functions = Pau::Finder->find_exported_function(
+            filename  => 't/fixtures/lib/ExportA.pm',
+            lib_paths => ['t/fixtures/lib/'],
+        );
         is $functions, hash {
             field package   => 'ExportA';
             field functions => array {

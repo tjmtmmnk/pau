@@ -52,6 +52,14 @@ DISTRIBUTIONS
       Scalar::Util 0
       Test::More 0
       version 0.77
+  Exporter-Tiny-1.006000
+    pathname: T/TO/TOBYINK/Exporter-Tiny-1.006000.tar.gz
+    provides:
+      Exporter::Shiny 1.006000
+      Exporter::Tiny 1.006000
+    requirements:
+      ExtUtils::MakeMaker 6.17
+      perl 5.006001
   File-Slurp-9999.32
     pathname: C/CA/CAPOEIRAB/File-Slurp-9999.32.tar.gz
     provides:
@@ -110,7 +118,7 @@ DISTRIBUTIONS
       File::Spec 3.00
       File::Spec::Functions 0
       if 0
-      perl 5.00503
+      perl 5.005030
       strict 0
   PPI-1.274
     pathname: O/OA/OALDERS/PPI-1.274.tar.gz
@@ -224,6 +232,13 @@ DISTRIBUTIONS
       overload 0
       perl 5.006
       strict 0
+  PadWalker-2.5
+    pathname: R/RO/ROBIN/PadWalker-2.5.tar.gz
+    provides:
+      PadWalker 2.5
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008001
   Params-Util-1.102
     pathname: R/RE/REHSACK/Params-Util-1.102.tar.gz
     provides:
@@ -258,6 +273,15 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Test::More 0
       perl 5.006001
+  Smart-Args-TypeTiny-0.13
+    pathname: A/AK/AKIYM/Smart-Args-TypeTiny-0.13.tar.gz
+    provides:
+      Smart::Args::TypeTiny 0.13
+      Smart::Args::TypeTiny::Check undef
+    requirements:
+      Module::Build::Tiny 0.035
+      PadWalker 0
+      Type::Tiny 1.002000
   Sub-Info-0.002
     pathname: E/EX/EXODIST/Sub-Info-0.002.tar.gz
     provides:
@@ -528,6 +552,63 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Type-Tiny-2.002001
+    pathname: T/TO/TOBYINK/Type-Tiny-2.002001.tar.gz
+    provides:
+      Devel::TypeTiny::Perl58Compat 2.002001
+      Error::TypeTiny 2.002001
+      Error::TypeTiny::Assertion 2.002001
+      Error::TypeTiny::Compilation 2.002001
+      Error::TypeTiny::WrongNumberOfParameters 2.002001
+      Eval::TypeTiny 2.002001
+      Eval::TypeTiny::CodeAccumulator 2.002001
+      Reply::Plugin::TypeTiny 2.002001
+      Test::TypeTiny 2.002001
+      Type::Coercion 2.002001
+      Type::Coercion::FromMoose 2.002001
+      Type::Coercion::Union 2.002001
+      Type::Library 2.002001
+      Type::Params 2.002001
+      Type::Params::Alternatives 2.002001
+      Type::Params::Parameter 2.002001
+      Type::Params::Signature 2.002001
+      Type::Parser 2.002001
+      Type::Parser::AstBuilder 2.002001
+      Type::Parser::Token 2.002001
+      Type::Parser::TokenStream 2.002001
+      Type::Registry 2.002001
+      Type::Tie 2.002001
+      Type::Tie::ARRAY 2.002001
+      Type::Tie::BASE 2.002001
+      Type::Tie::HASH 2.002001
+      Type::Tie::SCALAR 2.002001
+      Type::Tiny 2.002001
+      Type::Tiny::Class 2.002001
+      Type::Tiny::ConstrainedObject 2.002001
+      Type::Tiny::Duck 2.002001
+      Type::Tiny::Enum 2.002001
+      Type::Tiny::Intersection 2.002001
+      Type::Tiny::Role 2.002001
+      Type::Tiny::Union 2.002001
+      Type::Utils 2.002001
+      Types::Common 2.002001
+      Types::Common::Numeric 2.002001
+      Types::Common::String 2.002001
+      Types::Standard 2.002001
+      Types::Standard::ArrayRef 2.002001
+      Types::Standard::CycleTuple 2.002001
+      Types::Standard::Dict 2.002001
+      Types::Standard::HashRef 2.002001
+      Types::Standard::Map 2.002001
+      Types::Standard::ScalarRef 2.002001
+      Types::Standard::StrMatch 2.002001
+      Types::Standard::Tied 2.002001
+      Types::Standard::Tuple 2.002001
+      Types::TypeTiny 2.002001
+    requirements:
+      Exporter::Tiny 1.006000
+      ExtUtils::MakeMaker 6.17
+      perl 5.008001
   Types-Serialiser-1.01
     pathname: M/ML/MLEHMANN/Types-Serialiser-1.01.tar.gz
     provides:
