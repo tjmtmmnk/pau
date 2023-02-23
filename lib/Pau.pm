@@ -15,6 +15,8 @@ use DDP { show_unicode => 1, use_prototypes => 0, colored => 1 };
 use Carp qw(croak);
 use Module::CoreList;
 use Smart::Args::TypeTiny qw(args);
+use Parallel::ForkManager;
+use List::MoreUtils qw(natatime);
 
 use List::Util qw(first);
 
@@ -34,8 +36,15 @@ sub auto_use {
         my $source    => 'Str',
         my $use_cache => { isa => 'Bool', default  => !!0 },
         my $cache_dir => { isa => 'Str',  optional => 1 },
+        my $jobs      => { isa => 'Int',  optional => 1 },
         my $debug     => { isa => 'Bool', default  => !!0 },
         ;
+
+    if (!defined $jobs) {
+        my $uname = `uname`;
+        chomp($uname);
+        $jobs = $uname eq 'Linux' ? `nproc` : `sysctl -n hw.physicalcpu`;
+    }
 
     for (@$lib_paths) {
         unshift @INC, $_;
@@ -237,8 +246,6 @@ sub _collect {
             %$core_pkg_to_functions,
         };
 
-        use Parallel::ForkManager;
-        use List::MoreUtils qw(natatime);
         my $pm = Parallel::ForkManager->new(4);
         $pm->run_on_finish(
             sub {
@@ -252,7 +259,7 @@ sub _collect {
             }
         );
 
-        my $itr = natatime 500, @$lib_files;
+        my $itr = natatime 1000, @$lib_files;
 
         while (my @bulk_lib_files = $itr->()) {
             $pm->start and next;
