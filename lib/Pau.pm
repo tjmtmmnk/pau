@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
-our $VERSION = "0.091";
+our $VERSION = "0.092";
 
 use Pau::Extract;
 use Pau::Convert;
