@@ -2,6 +2,9 @@ Revision history for Perl extension Pau
 
 {{$NEXT}}
 
+0.10 2023-02-23T11:19:53Z
+    - bug fix
+
 0.094 2023-02-23T10:20:05Z
     - bug fix
 
