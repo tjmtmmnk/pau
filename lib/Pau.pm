@@ -192,6 +192,10 @@ sub _collect {
         my $jobs      => 'Int',
         ;
 
+    # too many use statement in single process, cause the lack of symbol. I don't know why.
+    # so, use multi process by fork.
+    # each process deal with 1000 use statements.
+
     my $collect_from_files = sub {
         my $files            = shift;
         my $pkg_to_functions = {};
