@@ -20,10 +20,6 @@ use List::MoreUtils qw(natatime);
 
 use List::Util qw(first);
 
-BEGIN {
-    $ENV{PAU_DO_NOT_DELETE} //= '';
-}
-
 use constant {
     CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-functions.json')      : undef,
     CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-core-functions.json') : undef,
@@ -31,13 +27,14 @@ use constant {
 
 # auto add and delete package
 sub auto_use {
-    args my $class    => 'ClassName',
-        my $lib_paths => 'ArrayRef[Str]',
-        my $source    => 'Str',
-        my $use_cache => { isa => 'Bool', default  => !!0 },
-        my $cache_dir => { isa => 'Str',  optional => 1 },
-        my $jobs      => { isa => 'Int',  optional => 1 },
-        my $debug     => { isa => 'Bool', default  => !!0 },
+    args my $class                => 'ClassName',
+        my $lib_paths             => 'ArrayRef[Str]',
+        my $source                => 'Str',
+        my $use_cache             => { isa => 'Bool',          default  => !!0 },
+        my $cache_dir             => { isa => 'Str',           optional => 1 },
+        my $jobs                  => { isa => 'Int',           optional => 1 },
+        my $debug                 => { isa => 'Bool',          default  => !!0 },
+        my $do_not_delete_modules => { isa => 'ArrayRef[Str]', optional => 1 },
         ;
 
     if (!defined $jobs) {
@@ -172,7 +169,7 @@ sub auto_use {
     my $unused_current_use_stmts = [ grep { !$_->{using} } @$current_use_statements ];
 
     for my $unused_use_stmt (@$unused_current_use_stmts) {
-        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } split(/ /, $ENV{PAU_DO_NOT_DELETE});
+        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } @$do_not_delete_modules;
 
         unless ($do_not_delete) {
             $class->_delete_use_statement($unused_use_stmt->{stmt});
@@ -354,23 +351,15 @@ This example reads from stdin and print auto-used document to stdout.
     while (<STDIN>) {
         $source .= $_;
     }
-    my $formatted = Pau->auto_use($source);
+    my $formatted = Pau->auto_use(
+        source    => $source,
+        lib_paths => ['lib', 't/lib', 'cpan/lib/perl5'],
+    );
     print(STDOUT $formatted);
 
 =head1 DESCRIPTION
 
 Pau inserts use-statement if not exist, and deletes use-statement if not used.
-
-=head2 Environment Variables
-
-=over
-
-=item* C<< PAU_DO_NOT_DELETE >>
-
-default: C<< '' >>.
-Pau delete unused include-statement automatically. This value prevents from incorrect deleting.
-
-=back
 
 =head1 LICENSE
 
