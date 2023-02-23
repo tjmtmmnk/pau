@@ -19,7 +19,6 @@ use Smart::Args::TypeTiny qw(args);
 use List::Util qw(first);
 
 BEGIN {
-    $ENV{DEBUG}             //= 0;
     $ENV{PAU_DO_NOT_DELETE} //= '';
 }
 
@@ -35,6 +34,7 @@ sub auto_use {
         my $source    => 'Str',
         my $use_cache => { isa => 'Bool', default  => !!0 },
         my $cache_dir => { isa => 'Str',  optional => 1 },
+        my $debug     => { isa => 'Bool', default  => !!0 },
         ;
 
     for (@$lib_paths) {
@@ -55,7 +55,7 @@ sub auto_use {
 
     my $need_packages = $extractor->get_function_packages;
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "need packages";
         p $need_packages;
     }
@@ -70,14 +70,14 @@ sub auto_use {
 
     my $used_functions = $extractor->get_functions;
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "used functions";
         p $used_functions;
     }
 
     my $lib_files = Pau::Finder->get_lib_files(lib_paths => $lib_paths);
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "lib files";
         p $lib_files;
     }
@@ -98,7 +98,7 @@ sub auto_use {
         } keys %$pkg_to_functions,
     };
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "func to pkgs";
         p $func_to_pkgs;
     }
@@ -110,7 +110,7 @@ sub auto_use {
         }
     }
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "need pkg to funcs";
         p $need_package_to_functions;
     }
@@ -170,7 +170,7 @@ sub auto_use {
         }
     }
 
-    if ($ENV{DEBUG}) {
+    if ($debug) {
         p "statements";
         p $statements;
     }
