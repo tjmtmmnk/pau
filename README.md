@@ -12,19 +12,15 @@ This example reads from stdin and print auto-used document to stdout.
     while (<STDIN>) {
         $source .= $_;
     }
-    my $formatted = Pau->auto_use($source);
+    my $formatted = Pau->auto_use(
+        source    => $source,
+        lib_paths => ['lib', 't/lib', 'cpan/lib/perl5'],
+    );
     print(STDOUT $formatted);
 
 # DESCRIPTION
 
 Pau inserts use-statement if not exist, and deletes use-statement if not used.
-
-## Environment Variables
-
-> &#x3d;item\* `PAU_DO_NOT_DELETE`
->
-> default: `''`.
-> Pau delete unused include-statement automatically. This value prevents from incorrect deleting.
 
 # LICENSE
 
