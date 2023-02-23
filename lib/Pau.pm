@@ -236,13 +236,13 @@ sub _collect {
     } else {
         my $functions_cache_file      = File::Spec->catfile($cache_dir, 'pau-functions.json');
         my $core_functions_cache_file = File::Spec->catfile($cache_dir, 'pau-core-functions.json');
-        my $pkg_to_functions          = {};
 
-        my $core_pkg_to_functions = Pau::Util->read_json_file($core_functions_cache_file) //= Pau::Finder->find_core_module_exported_functions;
+        my $pkg_to_functions      = Pau::Util->read_json_file($functions_cache_file)      // {};
+        my $core_pkg_to_functions = Pau::Util->read_json_file($core_functions_cache_file) // Pau::Finder->find_core_module_exported_functions;
+
         $pkg_to_functions = {
             %$pkg_to_functions,
             %$core_pkg_to_functions,
-            Pau::Util->read_json_file($functions_cache_file)->%*
         };
 
         my $last_cached_at = Pau::Util->last_modified_at($functions_cache_file);
@@ -258,7 +258,7 @@ sub _collect {
         };
 
         my $should_save_pkg_to_functions      = scalar(@$stale_lib_files) > 0;
-        my $should_save_core_pkg_to_functions = !defined $core_pkg_to_functions;
+        my $should_save_core_pkg_to_functions = Pau::Util->last_modified_at($core_pkg_to_functions) == 0;
         Pau::Util->write_json_file($functions_cache_file,      $pkg_to_functions)      if $should_save_pkg_to_functions;
         Pau::Util->write_json_file($core_functions_cache_file, $core_pkg_to_functions) if $should_save_core_pkg_to_functions;
 
