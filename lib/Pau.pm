@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
-our $VERSION = "0.084";
+our $VERSION = "0.085";
 
 use Pau::Extract;
 use Pau::Convert;
@@ -238,24 +238,32 @@ sub _collect {
         };
 
         use Parallel::ForkManager;
+        use List::MoreUtils qw(natatime);
         my $pm = Parallel::ForkManager->new(4);
         $pm->run_on_finish(
             sub {
-                my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $func) = @_;
+                my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $funcs) = @_;
 
-                if (defined($func)) {
-                    $pkg_to_functions->{ $func->{package} } = $func->{functions};
+                if (defined($funcs)) {
+                    for my $func (@$funcs) {
+                        $pkg_to_functions->{ $func->{package} } = $func->{functions};
+                    }
                 }
             }
         );
 
-        for my $lib_file (@$lib_files) {
+        my $itr = natatime 500, @$lib_files;
+
+        while (my @bulk_lib_files = $itr->()) {
             $pm->start and next;
-            my $func = Pau::Finder->find_exported_function(
-                filename  => $lib_file,
-                lib_paths => $lib_paths,
-            );
-            $pm->finish(0, $func);
+            my $funcs = [ map {
+                    Pau::Finder->find_exported_function(
+                        filename  => $_,
+                        lib_paths => $lib_paths,
+                    )
+            } @bulk_lib_files ];
+
+            $pm->finish(0, $funcs);
         }
         $pm->wait_all_children;
 

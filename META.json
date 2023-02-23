@@ -46,6 +46,7 @@
             "Data::UUID" : "== 1.226",
             "File::Slurp" : "== 9999.32",
             "JSON::XS" : "== 4.03",
+            "List::MoreUtils" : "== 0.430",
             "List::Util" : "== 1.59",
             "Module::CoreList" : "== 5.20220920",
             "PPI" : "== 1.274",
@@ -75,7 +76,7 @@
          "web" : "https://github.com/tjmtmmnk/pau"
       }
    },
-   "version" : "0.084",
+   "version" : "0.085",
    "x_contributors" : [
       "momochi29 <31027514+tjmtmmnk@users.noreply.github.com>"
    ],
