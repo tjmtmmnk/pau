@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
-our $VERSION = "0.09";
+our $VERSION = "0.094";
 
 use Pau::Extract;
 use Pau::Convert;
@@ -20,30 +20,23 @@ use List::MoreUtils qw(natatime);
 
 use List::Util qw(first);
 
-BEGIN {
-    $ENV{PAU_DO_NOT_DELETE} //= '';
-}
-
-use constant {
-    CACHE_FILE_FUNCTIONS             => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-functions.json')      : undef,
-    CACHE_FILE_CORE_MODULE_FUNCTIONS => $ENV{PAU_CACHE_DIR} ? File::Spec->catfile($ENV{PAU_CACHE_DIR}, 'pau-core-functions.json') : undef,
-};
-
 # auto add and delete package
 sub auto_use {
-    args my $class    => 'ClassName',
-        my $lib_paths => 'ArrayRef[Str]',
-        my $source    => 'Str',
-        my $use_cache => { isa => 'Bool', default  => !!0 },
-        my $cache_dir => { isa => 'Str',  optional => 1 },
-        my $jobs      => { isa => 'Int',  optional => 1 },
-        my $debug     => { isa => 'Bool', default  => !!0 },
+    args my $class                => 'ClassName',
+        my $lib_paths             => 'ArrayRef[Str]',
+        my $source                => 'Str',
+        my $use_cache             => { isa => 'Bool',          default  => !!1 },
+        my $cache_dir             => { isa => 'Str',           default  => '/var/tmp' },
+        my $jobs                  => { isa => 'Int',           optional => 1 },
+        my $debug                 => { isa => 'Bool',          default  => !!0 },
+        my $do_not_delete_modules => { isa => 'ArrayRef[Str]', optional => 1 },
         ;
 
     if (!defined $jobs) {
         my $uname = `uname`;
         chomp($uname);
         $jobs = $uname eq 'Linux' ? `nproc` : `sysctl -n hw.physicalcpu`;
+        chomp($jobs);
     }
 
     for (@$lib_paths) {
@@ -94,7 +87,8 @@ sub auto_use {
     my $pkg_to_functions = $class->_collect(
         lib_files => $lib_files,
         lib_paths => $lib_paths,
-        use_cache => $use_cache,
+        cache_dir => $cache_dir,
+        jobs      => $jobs,
     );
 
     my $func_to_pkgs = {
@@ -172,7 +166,7 @@ sub auto_use {
     my $unused_current_use_stmts = [ grep { !$_->{using} } @$current_use_statements ];
 
     for my $unused_use_stmt (@$unused_current_use_stmts) {
-        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } split(/ /, $ENV{PAU_DO_NOT_DELETE});
+        my $do_not_delete = grep { $_ eq $unused_use_stmt->{module} } @$do_not_delete_modules;
 
         unless ($do_not_delete) {
             $class->_delete_use_statement($unused_use_stmt->{stmt});
@@ -194,59 +188,18 @@ sub _collect {
     args my $class    => 'ClassName',
         my $lib_files => 'ArrayRef[Str]',
         my $lib_paths => 'ArrayRef[Str]',
-        my $use_cache => 'Bool',
+        my $cache_dir => 'Maybe[Str]',
+        my $jobs      => 'Int',
         ;
 
-    if ($use_cache) {
+    # too many use statement in single process, cause the lack of symbol. I don't know why.
+    # so, use multi process by fork.
+    # each process deal with 1000 use statements.
+
+    my $collect_from_files = sub {
+        my $files            = shift;
         my $pkg_to_functions = {};
-
-        my $core_pkg_to_functions = Pau::Util->read_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS) //= Pau::Finder->find_core_module_exported_functions;
-        $pkg_to_functions = {
-            %$pkg_to_functions,
-            %$core_pkg_to_functions,
-        };
-
-        my $last_cached_at = Pau::Util->last_modified_at(CACHE_FILE_FUNCTIONS);
-
-        my $stale_lib_files = [ grep {
-                my $last_modified_at = Pau::Util->last_modified_at($_);
-                $last_modified_at > $last_cached_at;
-        } @$lib_files ];
-
-        $pkg_to_functions = {
-            %$pkg_to_functions,
-            Pau::Util->read_json_file(CACHE_FILE_FUNCTIONS)->%*,
-        };
-
-        # partial cache update
-        # update only stale package
-        for my $lib_file (@$stale_lib_files) {
-            my $func = Pau::Finder->find_exported_function(
-                filename  => $lib_file,
-                lib_paths => $lib_paths,
-            );
-
-            if (scalar $func->{functions}->@* > 0) {
-                $pkg_to_functions->{ $func->{package} } = $func->{functions};
-            }
-        }
-
-        my $should_save_pkg_to_functions      = scalar(@$stale_lib_files) > 0;
-        my $should_save_core_pkg_to_functions = !defined $core_pkg_to_functions;
-        Pau::Util->write_json_file(CACHE_FILE_FUNCTIONS,             $pkg_to_functions)      if $should_save_pkg_to_functions;
-        Pau::Util->write_json_file(CACHE_FILE_CORE_MODULE_FUNCTIONS, $core_pkg_to_functions) if $should_save_core_pkg_to_functions;
-
-        return $pkg_to_functions;
-    } else {
-        my $pkg_to_functions = {};
-
-        my $core_pkg_to_functions = Pau::Finder->find_core_module_exported_functions;
-        $pkg_to_functions = {
-            %$pkg_to_functions,
-            %$core_pkg_to_functions,
-        };
-
-        my $pm = Parallel::ForkManager->new(4);
+        my $pm               = Parallel::ForkManager->new($jobs);
         $pm->run_on_finish(
             sub {
                 my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $funcs) = @_;
@@ -259,20 +212,59 @@ sub _collect {
             }
         );
 
-        my $itr = natatime 1000, @$lib_files;
+        my $itr = natatime 1000, @$files;
 
-        while (my @bulk_lib_files = $itr->()) {
+        while (my @bulk_files = $itr->()) {
             $pm->start and next;
             my $funcs = [ map {
                     Pau::Finder->find_exported_function(
                         filename  => $_,
                         lib_paths => $lib_paths,
                     )
-            } @bulk_lib_files ];
+            } @bulk_files ];
 
             $pm->finish(0, $funcs);
         }
         $pm->wait_all_children;
+
+        return $pkg_to_functions;
+    };
+
+    my $do_not_cache = !defined $cache_dir;
+
+    if ($do_not_cache) {
+        return +{
+            Pau::Finder->find_core_module_exported_functions->%*,
+            $collect_from_files->($lib_files)->%*,
+        };
+    } else {
+        my $functions_cache_file      = File::Spec->catfile($cache_dir, 'pau-functions.json');
+        my $core_functions_cache_file = File::Spec->catfile($cache_dir, 'pau-core-functions.json');
+
+        my $pkg_to_functions      = Pau::Util->read_json_file($functions_cache_file)      // {};
+        my $core_pkg_to_functions = Pau::Util->read_json_file($core_functions_cache_file) // Pau::Finder->find_core_module_exported_functions;
+
+        $pkg_to_functions = {
+            %$pkg_to_functions,
+            %$core_pkg_to_functions,
+        };
+
+        my $last_cached_at = Pau::Util->last_modified_at($functions_cache_file);
+
+        my $stale_lib_files = [ grep {
+                my $last_modified_at = Pau::Util->last_modified_at($_);
+                $last_modified_at > $last_cached_at;
+        } @$lib_files ];
+
+        $pkg_to_functions = {
+            %$pkg_to_functions,
+            $collect_from_files->($stale_lib_files)->%*,
+        };
+
+        my $should_save_pkg_to_functions      = scalar(@$stale_lib_files) > 0;
+        my $should_save_core_pkg_to_functions = Pau::Util->last_modified_at($core_functions_cache_file) == 0;
+        Pau::Util->write_json_file($functions_cache_file,      $pkg_to_functions)      if $should_save_pkg_to_functions;
+        Pau::Util->write_json_file($core_functions_cache_file, $core_pkg_to_functions) if $should_save_core_pkg_to_functions;
 
         return $pkg_to_functions;
     }
@@ -354,23 +346,15 @@ This example reads from stdin and print auto-used document to stdout.
     while (<STDIN>) {
         $source .= $_;
     }
-    my $formatted = Pau->auto_use($source);
+    my $formatted = Pau->auto_use(
+        source    => $source,
+        lib_paths => ['lib', 't/lib', 'cpan/lib/perl5'],
+    );
     print(STDOUT $formatted);
 
 =head1 DESCRIPTION
 
 Pau inserts use-statement if not exist, and deletes use-statement if not used.
-
-=head2 Environment Variables
-
-=over
-
-=item* C<< PAU_DO_NOT_DELETE >>
-
-default: C<< '' >>.
-Pau delete unused include-statement automatically. This value prevents from incorrect deleting.
-
-=back
 
 =head1 LICENSE
 

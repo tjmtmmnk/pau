@@ -22,6 +22,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -59,6 +60,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -87,6 +89,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -144,6 +147,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -164,6 +168,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -190,6 +195,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -234,6 +240,7 @@ describe 'auto_use' => sub {
         my $formatted = Pau->auto_use(
             source    => $plain,
             lib_paths => ['t/fixtures/lib'],
+            use_cache => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
@@ -255,13 +262,14 @@ describe 'auto_use' => sub {
             end;
         }, 'added is_cat';
     };
-    it 'can remain if PAU_DO_NOT_DELETE is specified' => sub {
-        my $filename = 't/fixtures/UseFunctionH.pm';
-        my $plain    = read_file($filename);
-        local $ENV{PAU_DO_NOT_DELETE} = 'Accessor';
+    it 'can remain if do_not_delete_modules is specified' => sub {
+        my $filename  = 't/fixtures/UseFunctionH.pm';
+        my $plain     = read_file($filename);
         my $formatted = Pau->auto_use(
-            source    => $plain,
-            lib_paths => ['t/fixtures/lib'],
+            source                => $plain,
+            lib_paths             => ['t/fixtures/lib'],
+            do_not_delete_modules => ['Accessor'],
+            use_cache             => !!0,
         );
         my $formatted_doc  = PPI::Document->new(\$formatted);
         my $formatted_incs = $formatted_doc->find('PPI::Statement::Include');
