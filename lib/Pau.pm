@@ -19,7 +19,6 @@ use Smart::Args::TypeTiny qw(args);
 use List::Util qw(first);
 
 BEGIN {
-    $ENV{PAU_NO_CACHE}      //= 1;
     $ENV{DEBUG}             //= 0;
     $ENV{PAU_DO_NOT_DELETE} //= '';
 }
@@ -34,14 +33,16 @@ sub auto_use {
     args my $class    => 'ClassName',
         my $lib_paths => 'ArrayRef[Str]',
         my $source    => 'Str',
+        my $use_cache => { isa => 'Bool', default  => !!0 },
+        my $cache_dir => { isa => 'Str',  optional => 1 },
         ;
 
     for (@$lib_paths) {
         unshift @INC, $_;
     }
 
-    my $should_set_cache_dir = $ENV{PAU_NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
-    croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
+    my $should_set_cache_dir = $use_cache && !defined $cache_dir;
+    croak 'Please set cache_dir. example cache_dir=/var/tmp' if $should_set_cache_dir;
 
     my $extractor = Pau::Extract->new($source);
 
@@ -84,7 +85,7 @@ sub auto_use {
     my $pkg_to_functions = $class->_collect(
         lib_files => $lib_files,
         lib_paths => $lib_paths,
-        use_cache => 0,
+        use_cache => $use_cache,
     );
 
     my $func_to_pkgs = {
@@ -336,16 +337,6 @@ Pau inserts use-statement if not exist, and deletes use-statement if not used.
 =head2 Environment Variables
 
 =over
-
-=item* C<< PAU_NO_CACHE >>
-
-default: C<< TRUE >>.
-If set to FALSE, create cache file for avoiding repeatedly loading exported functions.
-
-=item* C<< PAU_CACHE_DIR >>
-
-If you set PAU_NO_CACHE=TRUE, you must set this value.
-This value indicates under which directory the cache file should be created.
 
 =item* C<< PAU_DO_NOT_DELETE >>
 

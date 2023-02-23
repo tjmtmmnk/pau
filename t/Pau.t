@@ -3,8 +3,6 @@ use Test2::Tools::Spec;
 use Pau;
 use File::Slurp qw(read_file);
 
-local $ENV{PAU_NO_CACHE} = 1;
-
 describe 'auto_use' => sub {
     it 'exist pragma use' => sub {
         my $filename   = 't/fixtures/UseFunctionA.pm';
