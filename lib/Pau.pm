@@ -1,6 +1,7 @@
 package Pau;
 use strict;
 use warnings;
+use utf8;
 
 our $VERSION = "0.082";
 
@@ -30,9 +31,14 @@ use constant {
 
 # auto add and delete package
 sub auto_use {
-    args my $class => 'ClassName',
-        my $source => 'Str',
+    args my $class    => 'ClassName',
+        my $lib_paths => 'ArrayRef[Str]',
+        my $source    => 'Str',
         ;
+
+    for (@$lib_paths) {
+        unshift @INC, $_;
+    }
 
     my $should_set_cache_dir = $ENV{PAU_NO_CACHE} == 0 && !$ENV{PAU_CACHE_DIR};
     croak 'Please set PAU_CACHE_DIR environment variable. example PAU_CACHE_DIR=/var/tmp' if $should_set_cache_dir;
@@ -68,7 +74,7 @@ sub auto_use {
         p $used_functions;
     }
 
-    my $lib_files = Pau::Finder->get_lib_files;
+    my $lib_files = Pau::Finder->get_lib_files(lib_paths => $lib_paths);
 
     if ($ENV{DEBUG}) {
         p "lib files";
@@ -77,6 +83,7 @@ sub auto_use {
 
     my $pkg_to_functions = $class->_collect(
         lib_files => $lib_files,
+        lib_paths => $lib_paths,
         use_cache => 0,
     );
 
@@ -176,6 +183,7 @@ sub auto_use {
 sub _collect {
     args my $class    => 'ClassName',
         my $lib_files => 'ArrayRef[Str]',
+        my $lib_paths => 'ArrayRef[Str]',
         my $use_cache => 'Bool',
         ;
 
@@ -203,7 +211,10 @@ sub _collect {
         # partial cache update
         # update only stale package
         for my $lib_file (@$stale_lib_files) {
-            my $func = Pau::Finder->find_exported_function($lib_file);
+            my $func = Pau::Finder->find_exported_function(
+                filename  => $lib_file,
+                lib_paths => $lib_paths,
+            );
 
             if (scalar $func->{functions}->@* > 0) {
                 $pkg_to_functions->{ $func->{package} } = $func->{functions};
@@ -226,7 +237,10 @@ sub _collect {
         };
 
         for my $lib_file (@$lib_files) {
-            my $func = Pau::Finder->find_exported_function($lib_file);
+            my $func = Pau::Finder->find_exported_function(
+                filename  => $lib_file,
+                lib_paths => $lib_paths,
+            );
 
             if (scalar $func->{functions}->@* > 0) {
                 $pkg_to_functions->{ $func->{package} } = $func->{functions};
@@ -322,15 +336,6 @@ Pau inserts use-statement if not exist, and deletes use-statement if not used.
 =head2 Environment Variables
 
 =over
-
-=item* C<< PAU_LIB_PATH_LIST >>
-
-default: C<< '' >>.
-Please set your using library, separated by spaces.
-
-For example,
-
-    PAU_LIB_PATH_LIST='/cpan/lib/perl5 /app/your_project/lib'
 
 =item* C<< PAU_NO_CACHE >>
 
