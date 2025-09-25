@@ -16,3 +16,7 @@ on 'test' => sub {
     requires 'Test2::Suite', '0.000145';
     requires 'Test::More',   '0.98';
 };
+
+on configure => sub {
+    requires 'Module::Build::Tiny', '0.035';
+};
